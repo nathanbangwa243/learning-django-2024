@@ -8,7 +8,7 @@ A simple project to learn Django
 > - I will use [ChatGPT](https://chat.openai.com/) to provide a summary with a simple storytelling technique, making
     this document accessible and easy to understand even for novices.
 
-## Chap 1 : Intro
+## Chapter 1 : Intro
 
 Let me take you on a journey into the world of **Django**, a powerful open-source **Python framework** built for web development. 🌍🐍
 
@@ -51,3 +51,57 @@ However, sometimes **the server can't recover from an error**. In that case, fin
 If you don’t see `manage.py`, you're likely in the wrong directory. Use `ls` and `cd` to find it and restart your server.
 
 ---
+
+## Chapter 2 : SetUp the environment
+
+### 2.1 Install Django With pip
+
+Before you can start building a Django web application, you need to install Django. Here's how you can do it, step by step:
+
+1. **Open a terminal**: This is where you'll be running commands to set up Django. 💻
+
+2. **Navigate to your projects directory**: Go to the folder where you typically store your projects. If you don’t have one, now’s a great time to create it! 🗂️
+
+   Example:
+   ```
+   → cd projects/
+   ```
+
+3. **Create a directory for your Django project**: This will house all the files related to your web app. After creating the directory, navigate into it. 📁
+
+   ```
+   → mkdir django-web-app
+   → cd django-web-app
+   ```
+
+4. **Initialize Git** (if you're using it): This step is optional, but highly recommended for tracking changes in your project. 🔄
+
+   ```
+   → git init
+   ```
+
+5. **Set up a virtual environment**: Virtual environments help keep your project’s dependencies isolated from other projects. 🌐
+
+   ```
+   → python -m venv env
+   ```
+
+6. **Activate the virtual environment**: This step ensures that any Python packages you install will be restricted to this project. 🛠️
+
+   ```
+   → source env/bin/activate
+   ```
+
+7. **Install Django using pip**: Now that your environment is ready, install Django using pip, the Python package manager. 📦
+
+   ```
+   (env) → pip install django
+   ```
+
+8. **Track your dependencies**: Create a `requirements.txt` file to list all the packages your project relies on. This makes it easier to recreate the environment in the future. 📑
+
+   ```
+   → pip freeze > requirements.txt
+   ```
+
+Now Django is installed, and you're all set to start building your web application! 🚀
