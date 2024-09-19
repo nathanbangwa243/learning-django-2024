@@ -105,3 +105,85 @@ Before you can start building a Django web application, you need to install Djan
    ```
 
 Now Django is installed, and you're all set to start building your web application! 🚀
+
+---
+
+## Chapter 3: Set Up a New Django Project
+
+After setting up your environment and installing Django, it’s time to create the foundational structure for your web application.
+
+### 3.1 Generate the Project Structure
+
+Now that Django is installed, the next step is to generate the necessary files for your project. Instead of manually creating folders and files, Django provides a command-line tool to automate this process. 🎉
+
+In the terminal, navigate to your project directory (where you created your `django-web-app` folder). Use the following command to create the base structure of your project:
+
+```bash
+django-admin startproject merchex
+```
+
+This command generates essential project files, including a new directory named `merchex` and a script called `manage.py`. The `merchex` directory will hold the main settings and configuration files for your app, while `manage.py` is the go-to tool for running Django commands. 
+
+With just one command, you’ve laid the groundwork for your Django project! 🚀
+
+### 3.2 Running the Development Server
+
+With the basic structure in place, you can now launch the project on a development server. This allows you to see your application live, even if it's just the default Django page for now. 🌐
+
+To start the server, use the following command:
+
+```
+python manage.py runserver
+```
+
+Once executed, Django will provide a local web address **([http://127.0.0.1:8000/](http://127.0.0.1:8000/))** where you can preview your app in a browser. 
+
+At this stage, you should see the default Django page confirming that your project is running successfully. 🎨
+
+![Running the Development Server](docs/images/part2-start-project.png)
+
+### 3.3 Setting Up the Database
+
+When you first start the server, Django may alert you about pending database migrations. These migrations are necessary to set up the application’s database, which will eventually store all your data.
+
+To apply these migrations and create the database, run:
+
+```
+python manage.py migrate
+```
+
+This will create a database file named `db.sqlite3`, which holds all the data for your project. It’s a good practice to add this file to your `.gitignore` so it isn’t tracked in your version control system. 📂
+
+### 3.4 Creating Your First App
+
+In Django, a project is made up of several "apps," each focusing on a specific part of your application. For example, to handle **merchandise listings**, you’ll create an app called `listings`. This modular approach keeps your code organized as your project grows. 🛠️
+
+To create the `listings` app, use:
+
+```
+python manage.py startapp listings
+```
+
+A new folder named `listings` will appear, containing the necessary files to start developing features related to merchandise listings.
+
+### 3.5 Installing the App
+
+After creating your app, you need to tell Django about it. Open the `settings.py` file inside the `merchex` directory and find the `INSTALLED_APPS` list. Add `'listings'` to this list to ensure Django includes it when running the project.
+
+```python
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    
+    # New Apps
+    'listings',
+]
+```
+
+Your app is now officially part of the project, and you're ready to start building your first features! 🎉
+
+---
