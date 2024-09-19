@@ -187,3 +187,75 @@ INSTALLED_APPS = [
 Your app is now officially part of the project, and you're ready to start building your first features! 🎉
 
 ---
+
+## Chapter 4: Serve Content With a View
+
+Now that your Django project is set up, it's time to bring it to life by displaying content on a webpage. 🚀 In this chapter, you’ll learn how to create web pages by using *views* and *URL patterns*, which are fundamental parts of Django’s architecture.
+
+### 4.1 Create Your First View
+
+In Django, a *view* is a Python function that takes a user’s request and sends back a response. This is how content is served to users. Let’s start by creating a simple view that displays a message.
+
+1. **Open `views.py`**: Inside the `listings` app, locate `views.py`. Replace the default comment with a new function called `hello`, and import the `HttpResponse` class.
+
+```python
+from django.http import HttpResponse
+
+def hello(request):
+    return HttpResponse('<h1>Hello Django!</h1>')
+```
+
+🎉 You've just created your first view! This function will send back an HTML header saying "Hello Django!" whenever it's accessed.
+
+### 4.2 Connect the View to a URL
+
+Next, you need to connect this view to a specific URL. This is done by creating a *URL pattern*.
+
+2. **Edit `urls.py`**: Open `merchex/urls.py` and add a new path that links the `/hello/` URL to the `hello` view. Don’t forget to import the view from the `listings` app.
+
+```python
+from django.urls import path
+from listings import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('hello/', views.hello),
+]
+```
+
+Now, when you visit ([http://127.0.0.1:8000/hello/](http://127.0.0.1:8000/hello/)) in your browser, your `hello` view will display its message. 🎉
+
+### 4.3 The Role of URLs in Django
+
+Every time a user interacts with your site, it begins with a URL. Django uses these URLs to match user requests with the correct view. You’ve already created one URL pattern, but let’s create another for an "About Us" page.
+
+3. **Add a New View**: In `views.py`, add a second function called `about` to handle requests for the "About Us" page.
+
+```python
+def about(request):
+    return HttpResponse('<h1>About Us</h1> <p>We love merch!</p>')
+```
+
+4. **Update URLs**: Add this new view to your URL patterns by editing `urls.py`.
+
+```python
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('hello/', views.hello),
+    path('about-us/', views.about),
+]
+```
+
+Once done, visit ([http://127.0.0.1:8000/about-us/](http://127.0.0.1:8000/about-us/)) to see the "About Us" page! 🖥️
+
+### 4.4 Understanding Views and URL Patterns
+
+Views and URL patterns work together to make your Django site interactive. The URL pattern tells Django which view to call based on the user’s request. While it may seem like magic when the view is automatically executed, this is actually Django handling everything behind the scenes. 🧑‍💻
+
+### 4.5 Try It Yourself
+
+Now that you’ve created two pages, it’s time to practice by adding more. Create two new pages: one for **merchandise listings** and one for **contact information**. Follow the same steps: define views in `views.py` and link them to URLs in `urls.py`. 
+
+By the end of this chapter, you’ll have multiple pages running on your site, and you’ll be well on your way to mastering Django! 🎉
+
+---
