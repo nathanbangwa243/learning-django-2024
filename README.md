@@ -259,3 +259,84 @@ Now that you’ve created two pages, it’s time to practice by adding more. Cre
 By the end of this chapter, you’ll have multiple pages running on your site, and you’ll be well on your way to mastering Django! 🎉
 
 ---
+
+## Chapter 5: Save Data to a Database With a Model and a Migration
+
+Now that your Django project is up and running, it’s time to add some life by saving real data in the database. In this chapter, we will explore how Django uses **models** to represent entities and how **migrations** help us manage the database schema.
+
+### 5.1 Creating a Model
+
+In any web application, storing data is essential. Imagine you're building an app that tracks **bands** and their merchandise. Each of these is an entity, and in Django, you represent these entities with a **model**.
+
+A model is like a blueprint, defining the information you want to store about an entity. For instance, the **Band** model might have fields like the band's **name**, **genre**, and the year they became active. These fields store the details you need.
+
+**Here’s the cool part:** Django makes it super easy to create models using Python classes! 🎉 You define a class for each entity, and Django takes care of everything else, like saving data to the database. 
+
+### 5.2 Adding Your First Model
+
+To create the **Band** model, you simply edit the `models.py` file in your app. You define a class that inherits from Django's `models.Model`, which brings all the tools needed to interact with the database.
+
+For example:
+```python
+class Band(models.Model):
+    name = models.fields.CharField(max_length=100)
+```
+In this case, we’ve created a field `name` to store the band’s name. Django will take care of adding this field to the database for us. 🎸
+
+### 5.3 Applying Migrations to the Database
+
+Now that you've defined the **Band** model, it’s time to make sure the database knows about it. This is where **migrations** come in. Migrations are Django’s way of translating your model changes into database schema updates. 🛠️
+
+First, you need to generate a migration file that tells Django what changes to make:
+```bash
+python manage.py makemigrations
+```
+Django creates a migration file for the **Band** model. To apply this migration and update the database schema, run:
+```bash
+python manage.py migrate
+```
+Now, the database is ready to store bands! 🎉
+
+### 5.4 Saving Data in the Django Shell
+
+With the **Band** model and database schema set up, you can now add data. One way to do this is through the **Django shell**, which allows you to interact with your app's models in real-time.
+
+Open the shell:
+```bash
+python manage.py shell
+```
+Create a new band:
+```python
+from listings.models import Band
+band = Band(name='De La Soul')
+band.save()
+```
+The `save()` method stores this new band in the database. Just like that, you’ve saved your first object to the database! 🎉
+
+### 5.5 Displaying Data in the View
+
+Now that the **Band** objects are stored in the database, how do we display them on a webpage? Simple. In your view, use `Band.objects.all()` to retrieve all bands and pass them to the template.
+
+Here’s an example in your `views.py`:
+```python
+from listings.models import Band
+
+def hello(request):
+    bands = Band.objects.all()
+    return HttpResponse(f"""
+        <h1>Hello Django!</h1>
+        <p>My favorite bands are:</p>
+        <ul>
+            <li>{bands[0].name}</li>
+            <li>{bands[1].name}</li>
+            <li>{bands[2].name}</li>
+        </ul>
+    """)
+```
+This code grabs the list of bands from the database and displays their names in an HTML list. 🎶
+
+### 5.6 Now It’s Your Turn!
+
+Try adding a new **listing** model for merchandise items. Give it a `title` field and practice using migrations to add it to the database. Then, use the Django shell to add a few **listing** objects and display them in your app.
+
+---
