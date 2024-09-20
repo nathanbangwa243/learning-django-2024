@@ -340,3 +340,71 @@ This code grabs the list of bands from the database and displays their names in 
 Try adding a new **listing** model for merchandise items. Give it a `title` field and practice using migrations to add it to the database. Then, use the Django shell to add a few **listing** objects and display them in your app.
 
 ---
+
+## Chapter 6: Clean Separation of Logic and Presentation With Django Templates
+
+After saving data to the database in the previous chapter, it’s time to improve how we display that data. Right now, our views are cluttered with HTML mixed into Python code. This can quickly become messy and hard to maintain, especially as your application grows. 
+
+In this chapter, we’ll solve this problem by separating the logic from the presentation using **Django templates**.
+
+### 6.1 The Problem with HTML in Views
+
+When you mix your app’s logic (like retrieving data from the database) with HTML presentation in your views, the code becomes difficult to manage. 
+
+For example, if you want to update the design of a webpage, you’ll need to dig through the Python code, which can be confusing and error-prone. 
+
+**Here’s the solution:** Django provides a powerful way to separate concerns by using templates for the presentation layer. Templates handle all the HTML, while views focus on logic like fetching data. 🧹✨
+
+### 6.2 Creating and Using a Template
+
+To start cleaning up your views, you need to create a template file for the HTML. This file will be separate from the Python code, ensuring a clear distinction between what is displayed and how it’s processed. 📝💻
+
+1. **Create the Template File**  
+   First, create a new HTML file for your view in a `templates` folder (e.g., `listings/templates/listings/hello.html`). Inside this file, you can write your HTML as usual, without worrying about Python code. 🗂️📄
+
+2. **Refactor the View**  
+   Next, update the view in `views.py` to use the template. Instead of writing HTML in the view itself, you’ll use Django’s `render()` function to return a rendered template. This keeps the view focused on fetching data. Here’s an updated view:
+   ```python
+   from django.shortcuts import render
+   from listings.models import Band
+
+   def hello(request):
+       bands = Band.objects.all()
+       return render(request, 'listings/hello.html', {'bands': bands})
+   ```
+   🎨🔄
+
+### 6.3 Using Template Variables
+
+Once you’ve refactored the view, you’ll need to display the data in your template. Django makes this easy with **template variables**. For example, to show the name of each band, use double curly braces (`{{ }}`) in the HTML:
+```html
+<ul>
+    {% for band in bands %}
+        <li>{{ band.name }}</li>
+    {% endfor %}
+</ul>
+```
+Now, Django will replace `{{ band.name }}` with the actual band names from the database. 🎶🎤
+
+### 6.4 Filters and Logic in Templates
+
+Django templates also allow you to apply filters and use basic logic. For example, you can use the `upper` filter to display band names in uppercase:
+```html
+<li>{{ band.name|upper }}</li>
+```
+You can also add conditional logic, like an `if` statement, to customize the output based on the data:
+```html
+{% if bands|length > 0 %}
+    <p>Here are my favorite bands:</p>
+{% else %}
+    <p>No bands to display.</p>
+{% endif %}
+```
+💡🔄
+
+### 6.5 A Clean and Maintainable Approach
+
+By using templates, you keep your views simple and focused on data processing. The templates take care of rendering the HTML, making your app much easier to maintain and scale as you add more features. 🚀💻
+
+🎉 You’re now equipped to build web pages that display dynamic content while keeping your code clean and organized!
+

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Merchex</title>
+    </head>
+    <body>
+        <h1>Welcome to Merchex</h1>
+        <p>I have {{ bands|length }} favorites group</p>
+        <p>My favorites Band</p>
+        <ul>
+            {% for band in bands %}
+                {% if "happy people" in band.name|lower %}
+                    <li><strong>{{ band.name|upper }}</strong></li>
+                {% elif "hillsong" in band.name|lower %}
+                    <li><strong>{{ band.name|upper }}</strong></li>
+                {% else %}
+                    <li>{{ band.name|upper }}</li>
+                {% endif %}
+
+            {% endfor %}
+        </ul>
+
+    </body>
+</html>

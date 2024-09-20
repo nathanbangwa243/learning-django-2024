@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <title>Merchex</title>
+  </head>
+  <body>
+    <h1>Listings</h1>
+    <p>Here our awesome collection:</p>
+    <ul>
+      {% for listing in listings %}
+        {% if "dena" in listing.title|lower %}
+          <li><strong>{{ listing.title }}</strong></li>
+        {% else  %}
+          <li>{{ listing.title }}</li>
+
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </body>
+</html>
