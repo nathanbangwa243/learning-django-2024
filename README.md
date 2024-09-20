@@ -408,3 +408,104 @@ By using templates, you keep your views simple and focused on data processing. T
 
 🎉 You’re now equipped to build web pages that display dynamic content while keeping your code clean and organized!
 
+---
+
+## Chapter 7: Add Structure and Style to Your Site With a Base Template, CSS, and Static Files
+
+Building on the foundation of clean logic and presentation from the previous chapter, it’s now time to refine your Django project further. As your app grows, managing multiple templates can become cumbersome, especially with repeated HTML code. 
+
+In this chapter, we'll introduce **base templates**, **static files**, and **CSS**, helping you create a well-structured and visually appealing site. 🎨
+
+### 7.1 The Challenge of Repeated Code
+
+As you develop your app, you’ll notice many templates containing the same HTML structure, like `<html>`, `<head>`, and `<body>`. This repetition not only clutters your code but also makes it harder to manage changes. 
+
+Imagine needing to update the title across several pages! This is where the **DRY principle**—Don’t Repeat Yourself—comes in handy. By utilizing a base template, you can centralize common HTML elements, making your code cleaner and easier to maintain. 🧹
+
+### 7.2 Creating a Base Template
+
+To start, you’ll create a **base template** that contains the shared HTML structure. This base template will serve as a foundation for all your other templates. 
+
+**Here’s how:**
+
+1. **Define Common HTML**  
+   Create a new file called `base.html` in your `templates` folder. Include the common elements, such as the `<html>`, `<head>`, and a `{% block content %}` section for unique content:
+
+   ```html
+   <!-- listings/templates/listings/base.html -->
+   <html>
+       <head>
+           <title>Merchex</title>
+       </head>
+       <body>
+           {% block content %}{% endblock %}
+       </body>
+   </html>
+   ```
+
+2. **Inherit from the Base Template**  
+   In your specific templates (like `hello.html`), you’ll now use the `{% extends 'listings/base.html' %}` tag at the top. This tells Django to build upon the base template, allowing you to focus only on the unique content for that page:
+
+   ```html
+   <!-- listings/templates/listings/hello.html -->
+   {% extends 'listings/base.html' %}
+
+   {% block content %}
+   <h1>Hello Django!</h1>
+   <p>My favorite bands are:</p>
+   <ul>
+       {% for band in bands %}
+           <li>{{ band.name }}</li>
+       {% endfor %}
+   </ul>
+   {% endblock %}
+   ```
+
+### 7.3 Adding Style with CSS
+
+Now that your structure is solid, it’s time to enhance your site’s appearance with **CSS**. You’ll create a static file for your styles, which will ensure a consistent look across your application. Here’s how:
+
+1. **Create a Static Folder**  
+   Inside your app directory, create a folder named `static`, and within it, another folder for your CSS files (e.g., `listings/static/listings/`). 
+
+2. **Link Your CSS File**  
+   In your base template, add a `<link>` tag to connect your CSS file. Use Django’s `{% static %}` tag to ensure the file is correctly located when the site runs:
+
+   ```html
+   <link rel="stylesheet" href="{% static 'listings/styles.css' %}" />
+   ```
+   For the  `static`  tag to work, we first need to `load` it into this template. We do that by adding a  `load`  tag at the very beginning of the file, like this: 
+   
+   ```html
+   {% load static %}
+   <html>
+   ...
+   ```
+
+3. **Create a CSS File**  
+   In your `listings/static/listings/` folder, create a file called `styles.css`:
+
+   ```css
+   /* listings/static/listings/styles.css */
+   body {
+       background-color: red; /* Just for testing */
+   }
+   ```
+
+### 7.4 Ensure Everything Works
+
+Once your CSS file is linked, do a quick test to see if it loads correctly. Start your development server and check if your styles apply. If everything is set up right, you’ll have a stylish site that stands out! 🎉
+
+### 7.5 Update All Templates
+
+With a working base template and CSS, your next task is to ensure all your page templates inherit from the base template. Each template should include the `{% extends %}` and `{% block content %}` tags, keeping your code consistent and easy to manage. 🔧
+
+### 7.6 Recap of MVT Architecture
+
+This chapter reinforces the **MVT architecture**—Models, Views, and Templates—which keeps your application organized. By separating your application into these components, you facilitate teamwork and maintainability. Each developer can focus on their part without worrying about conflicting changes. 
+
+### 7.7 Embracing Server-Side Rendering
+
+Finally, it’s essential to understand the benefits of **server-side rendering**. This approach generates HTML on the server and sends it to the client, making it simpler to build and maintain your app. While client-side rendering is becoming popular, server-side rendering remains a great starting point, especially for proof-of-concept projects.
+
+---
