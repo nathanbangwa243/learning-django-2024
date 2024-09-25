@@ -1,3 +1,5 @@
+from contextlib import nullcontext
+
 from django.db import models
 from django.db.models import fields
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -24,6 +26,12 @@ class Band(models.Model):
         return f"{self.name}"
 
 class Listing(models.Model):
+    class Type(models.TextChoices):
+        RECORDS = "REC"
+        CLOTHING = "CLO"
+        POSTERS = "POS"
+        MISCELLANEOUS = "MIS"
+
     title = fields.CharField(max_length=100)
     description = fields.CharField(max_length=1000)
     sold = fields.BooleanField(default=False)
@@ -33,10 +41,7 @@ class Listing(models.Model):
         blank=True
     )
 
-    class Type(models.TextChoices):
-        RECORDS = "REC"
-        CLOTHING = "CLO"
-        POSTERS = "POS"
-        MISCELLANEOUS = "MIS"
-
     type = fields.CharField(choices=Type.choices, max_length=5)
+
+    # Foreign Keys
+    band = models.ForeignKey(Band, null=True, on_delete=models.SET_NULL)

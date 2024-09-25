@@ -675,3 +675,65 @@ In this chapter, we learned how to perform CRUD operations through Django’s Ad
 As we move forward, we’ll explore how to enhance user interactions further by creating customized forms for front-end use, ensuring a seamless experience for all users. 🚀
 
 ---
+
+## Chapter 10: Create Many-to-One Relationships with Foreign Keys 🔗
+
+Building on our knowledge of CRUD operations in the Django Admin, this chapter explores how to connect models together, allowing us to represent relationships in our data. Specifically, we’ll dive into **many-to-one relationships** using **Foreign Keys**.
+
+### Understanding the One-to-Many Relationship 🎶🛍️
+
+Imagine you’re managing merchandise listings for a band, like t-shirts or posters. Each listing belongs to one specific band, but a band can have multiple listings. This is a classic example of a **one-to-many relationship**: one band can have many listings, but each listing belongs to just one band.
+
+For example:
+- *De La Soul* might have listings for a tour poster, a t-shirt, and a concert ticket. These three listings are all related to one band—*De La Soul*. 
+- But the listings can’t be tied to two bands simultaneously, like *De La Soul* and *Foo Fighters*. Each listing has only one band.
+
+### Using Foreign Keys to Link Models 🗝️
+
+To establish this relationship in Django, we add a **ForeignKey** field to the `Listing` model. This allows each listing to be linked to a specific band.
+
+```python
+class Listing(models.Model):
+    ...
+    band = models.ForeignKey(Band, null=True, on_delete=models.SET_NULL)
+```
+
+Here’s what’s happening:
+- **`ForeignKey(Band)`**: This tells Django that each `Listing` is related to a `Band`.
+- **`null=True`**: This allows us to create a listing even if it’s not linked to a band right away.
+- **`on_delete=models.SET_NULL`**: If a band gets deleted, the `band` field in the listing will be set to `null` rather than deleting the listing.
+
+### Updating the Database 🛠️
+
+Once we’ve added the `ForeignKey` field, we need to update the database to reflect this change. We use the migration commands:
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+These commands ensure our models are synchronized with the database, and we can now link bands to their listings.
+
+### Managing Foreign Keys in the Admin Panel 🖥️
+
+With the foreign key in place, the Django Admin panel now offers a dropdown menu when creating or editing a `Listing`. This dropdown allows us to select which band the listing is associated with.
+
+To enhance the Admin interface, we can customize it to display the band alongside each listing:
+
+```python
+class ListingAdmin(admin.ModelAdmin):
+    list_display = ('title', 'band')
+```
+
+Now, in the Admin list view, you’ll be able to see both the listing and the band it’s linked to. This makes it easier to manage and view the relationships between models.
+
+### Conclusion
+
+In this chapter, we’ve taken a significant step by connecting our models through **Foreign Keys**, establishing many-to-one relationships. This allows us to manage more complex data structures, making our app more dynamic and functional.
+
+Now, each listing can be tied to a specific band, making it easier to organize and retrieve related data. 🎉
+
+Next, we’ll explore how to improve user experience further by creating forms that allow users to interact with this connected data on the front end!
+
+---
+
