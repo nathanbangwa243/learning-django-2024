@@ -22,6 +22,9 @@ class Band(models.Model):
     active = fields.BooleanField(default=True)
     official_homepage = fields.URLField(null=True, blank=True)
 
+    # manual error
+    # limited_edition = fields.BooleanField(default=False)
+
     def __str__(self):
         return f"{self.name}"
 
