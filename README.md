@@ -737,7 +737,7 @@ Next, we’ll explore how to improve user experience further by creating forms t
 
 ---
 
-### Chapter 11: Overcome Common Migration Pitfalls 🚧
+## Chapter 11: Overcome Common Migration Pitfalls 🚧
 
 As we continue developing Django applications, there’s always a possibility of making mistakes while creating migrations. Don’t worry—there are two effective strategies to correct such issues:
 
