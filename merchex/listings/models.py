@@ -48,3 +48,6 @@ class Listing(models.Model):
 
     # Foreign Keys
     band = models.ForeignKey(Band, null=True, on_delete=models.SET_NULL)
+
+    # manual error
+    limited_edition = fields.BooleanField(default=False)
