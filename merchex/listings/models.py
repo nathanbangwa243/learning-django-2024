@@ -20,6 +20,9 @@ class Band(models.Model):
     active = fields.BooleanField(default=True)
     official_homepage = fields.URLField(null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.name}"
+
 class Listing(models.Model):
     title = fields.CharField(max_length=100)
     description = fields.CharField(max_length=1000)
