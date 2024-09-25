@@ -51,3 +51,4 @@ class Listing(models.Model):
 
     # manual error
     limited_edition = fields.BooleanField(default=False)
+    antiquity = fields.BooleanField(default=False)
