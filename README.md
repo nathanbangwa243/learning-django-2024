@@ -509,3 +509,87 @@ This chapter reinforces the **MVT architecture**—Models, Views, and Templates�
 Finally, it’s essential to understand the benefits of **server-side rendering**. This approach generates HTML on the server and sends it to the client, making it simpler to build and maintain your app. While client-side rendering is becoming popular, server-side rendering remains a great starting point, especially for proof-of-concept projects.
 
 ---
+
+## Chapter 8: Capturing Data with Models and Fields 📋
+
+In this chapter, we dive into **models** and **fields** in Django, focusing on how they help us structure data. Think of a **model** as a blueprint for an entity in your app. 
+
+For example, we used a model for a music band. Each band has different characteristics like a name, genre, and year they were formed. These characteristics are stored in **fields**.
+
+#### Model Example:
+```python
+from django.db import models
+
+class Band(models.Model):
+    name = models.CharField(max_length=100)
+    genre = models.CharField(max_length=50)
+    year_formed = models.IntegerField()
+    is_active = models.BooleanField(default=True)
+```
+
+Django provides different field types depending on the kind of data we want to store. Here's how we broke it down:
+
+- **CharField**: For strings like the name and biography.
+- **IntegerField**: Perfect for numbers, like the year the band was formed.
+- **BooleanField**: A true/false field, used to mark if the band is still active.
+- **URLField**: Specifically for web addresses.
+
+Each field can have **options** or **rules**. For example, the name field has a maximum length, and the year must be between 1900 and 2021. If the band doesn't have a homepage, we allow that field to be left blank.
+
+#### Field with Rules Example:
+```python
+class Band(models.Model):
+    name = models.CharField(max_length=100)
+    genre = models.CharField(max_length=50)
+    year_formed = fields.IntegerField(
+        validators=[MinValueValidator(1900), MaxValueValidator(2024)]
+    )
+    website = models.URLField(blank=True)
+```
+
+### Adding Choices 🎛️
+
+For certain fields, like genre, we may want to limit user input to a list of predefined choices (to avoid inconsistencies). Django's `TextChoices` class makes this possible. 
+
+We defined genres such as Hip-Hop, Synth Pop, and Alternative Rock using this feature.
+
+#### Choices Example:
+```python
+class GenreChoices(models.TextChoices):
+    HIPHOP = 'HH'
+    SYNTHPOP = 'SP'
+    ALTERNATIVEROCK = 'AR'
+
+class Band(models.Model):
+    name = models.CharField(max_length=100)
+    genre = models.CharField(max_length=2, choices=GenreChoices.choices)
+```
+
+### Migrating the Changes 🚀
+
+Once new fields are added to a model, we must update the database to reflect these changes. This is done through a **migration**. 
+
+Think of it as a way to keep the database in sync with the model. The `makemigrations` command checks for changes, and Django will sometimes ask for default values when non-optional fields are added.
+
+#### Migration Commands:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### Handling Defaults and Validations 🛠️
+
+When we add new columns to an existing table, Django needs a way to fill in those values for existing records. For example:
+- If the **biography** field is added, Django asks for a default value (we used an empty string).
+- For **genre**, we chose Hip-Hop as a placeholder.
+- The **year_formed** got a default value of 2000.
+
+This way, we ensure every record is complete, even if the new fields were added later.
+
+After that, we can apply the migration with the `migrate` command, and the database will now support the new structure! 🎉
+
+### Conclusion
+
+In this chapter, we learned how to capture data in Django using models and fields, and how to handle migrations and defaults. In the next part, we'll learn how to enforce users to input values in forms and handle data validation more robustly. 🧐
+
+---
