@@ -2,12 +2,16 @@
 
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Merchex</title>
-        <link rel="stylesheet" href="{% static 'listings/style.css' %}"/>
-    </head>
-    <body>
-        {% block content %}{% endblock %}
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <title>Merchex</title>
+    <!--        <link rel="stylesheet" href="{% static 'listings/style.css' %}"/>-->
+</head>
+<body>
+<nav>
+    <a href="{% url 'band-list' %}">Bands</a>
+    <a href="{% url 'listing-list' %}">Listings</a>
+</nav>
+{% block content %}{% endblock %}
+</body>
 </html>

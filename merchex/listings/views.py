@@ -5,28 +5,48 @@ from listings.models import Band
 from listings.models import Listing
 
 
-def hello(request):
+def band_list(request):
     bands = Band.objects.all()
 
     return render(request,
-                  'listings/hello.html',
+                  'listings/band_list.html',
                   {
                       "bands": bands,
                   })
 
 
+def band_detail(request, band_id):
+    band = Band.objects.get(id=band_id)
+
+    return render(request,
+                  'listings/band_detail.html',
+                  {
+                      'band_id': band_id,
+                      'band': band,
+                  })
+
+
 def about(request):
     return render(request,
-                  'listings/about.html',)
+                  'listings/about.html', )
 
 
-def listings(request):
+def listing_list(request):
     listings = Listing.objects.all()
 
     return render(request,
-                  'listings/listings.html',
-                  {'listings': listings},)
+                  'listings/listing_list.html',
+                  {'listings': listings}, )
 
+def listing_detail(request, listing_id):
+    listing = Listing.objects.get(id=listing_id)
+
+    return render(request,
+                  'listings/listing_detail.html',
+                  {
+                      'listing_id': listing_id,
+                      'listing': listing,
+                  })
 
 def contact(request):
-    return render(request, 'listings/contact.html',)
+    return render(request, 'listings/contact.html', )

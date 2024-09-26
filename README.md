@@ -782,4 +782,97 @@ And when working in teams, learning to merge migrations will help you avoid conf
 Happy coding! 🎉
 
 ---
+## Chapter 12 : Read Data in a List View and Detail View
 
+In this part of the Django course, the focus shifts from working behind the scenes (in the admin and shell) to crafting the user experience by building interfaces that allow users to **read** and interact with data. 
+
+This starts with creating a **list view** and a **detail view**, essential features of any website that displays multiple objects like posts, products, or listings.
+
+### What is a CRUD Interface? 🤔
+
+You’ve been learning how to perform **CRUD operations** (Create, Read, Update, Delete), and now it's time to bring that power to your users. 
+
+**They’ll be able to:**
+
+- **Read** through lists of items (like a list of bands or listings)
+- **View** details about individual items
+- **Add**, **update**, or **remove** their own items
+
+Most of the websites you use function this way! Think about social media—you create posts, edit them, and maybe even delete them. You view a list of posts (called a “feed”) and click on specific ones to see more.
+
+### Step 1: Creating a List View 📄
+
+The **list view** is where users see an overview of all objects in your database. For example, a list of bands, with only key details like their names displayed.
+
+- First, you create a new template named `band_list.html` to display all band names.
+- In the view (`band_list` function), you fetch all bands from the database using `Band.objects.all()`.
+- You link the view to the URL path `/bands/` in `urls.py`, so when users go to that path, they see the list of bands.
+
+Now, the page shows a simple list of band names!
+
+### Step 2: Creating a Detail View 🔍
+
+Next, we create the **detail view** for each band. This allows users to click on a band’s name and see more information about it, such as its genre, year formed, and a biography.
+
+- The URL for each band's details will follow this pattern: `/bands/<id>/`, where `<id>` is the band’s unique identifier.
+
+   ```python 
+   urlpatterns = [
+    ...
+
+    # MY VIEWS
+    # Model Band
+    path('bands/', views.band_list, name='band-list'),
+    path('bands/<int:band_id>/', views.band_detail, name='band-detail'),
+
+    ...
+   
+  ]
+   ```
+   
+- The `band_detail` view retrieves a single band by its `id` using `Band.objects.get(id=id)` and passes it to the `band_detail.html` template.
+- The template displays the band’s full details, including genre, year formed, and a clickable link to the band's homepage.
+
+### Step 3: Linking the Views 🔗
+
+It’s time to make navigation easier! Each band name in the list view will become a clickable link that takes users to the detail view for that band.
+
+- In `band_list.html`, you wrap the band names with a link that uses Django’s `{% url %}` template tag, ensuring dynamic URLs that adapt to future changes.
+   ```html
+   {% extends "listings/base.html" %}
+
+   {% block content %}
+   
+   <h1>Groupes</h1>
+   
+   <ul>
+        {% for band in bands %}
+            <li><a href="{% url 'band-detail' band.id %}">{{ band.name }}</a></li>
+        {% endfor %}
+   </ul>
+   
+   {% endblock %}
+
+   ```
+- You also add a “Back to all Bands” link on the detail page to guide users back to the list.
+
+   ```html
+   <p>
+        <a href="{% url 'band-list' %}">Retourner a tous les groupes</a>
+   </p>
+   ```
+Finally, to enhance navigation across the site, a **navigation bar** is added to the base template. This navbar will include a link to the list of bands and will appear on every page.
+
+```html
+<nav>
+    <a href="{% url 'band-list' %}">Bands</a>
+</nav>
+```
+
+### Your Turn! 🛠️
+
+With the structure in place, it’s your task to replicate this for the **Listing** model. Build list and detail views for listings, add links between them, and ensure the site is easy to navigate with your new list and detail views.
+
+This marks the transition from working only with backend logic to designing how users actually experience the app! 👩‍💻👨‍💻
+
+---
