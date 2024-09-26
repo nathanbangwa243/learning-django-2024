@@ -876,3 +876,84 @@ With the structure in place, it’s your task to replicate this for the **Listin
 This marks the transition from working only with backend logic to designing how users actually experience the app! 👩‍💻👨‍💻
 
 ---
+
+## Chapter 13 : Capture User Input With Django Forms
+
+In this chapter, you dive deeper into the "write" operations of Django by learning how to capture user input using forms and send that data from the browser to the server.
+
+### What are Forms? 🤔
+Forms allow users to input data, like creating a new band, and send it to the server. Unlike "read-only" operations, forms handle "write" operations, which modify data in some way. You'll encounter forms when users need to create, update, or delete data.
+
+In this chapter, you explore how to build a “Contact Us” form, starting by defining the form itself.
+
+### Define a Form in Django ✍️
+You begin by creating the form class, just like you create models. Each form field represents an input the user will fill in, such as name, email, and message. 
+
+In Django, you can easily set constraints like optional fields (`required=False`) or max character limits.
+
+```python
+class ContactUsForm(forms.Form):
+    name = forms.CharField(required=False)
+    email = forms.EmailField()
+    message = forms.CharField(max_length=1000)
+```
+
+This form is integrated into your view, and Django renders it for you with just one line of code: `{{ form }}`.
+
+### Handle Form Data in Views 📥
+Once users submit the form, Django sends the data to the server as an HTTP POST request. The view now handles two scenarios:
+
+1. **GET Request:** Shows the form for the user to fill out.
+2. **POST Request:** Receives and processes the form data.
+
+By using simple print statements, you can inspect the data received from the form.
+
+```python
+if request.method == 'POST':
+    form = ContactUsForm(request.POST)
+    if form.is_valid():
+        # send the email
+else:
+    form = ContactUsForm()
+```
+
+### Server-Side Validation ✔️
+Django automatically validates the input based on the form rules you’ve defined. If the data is invalid, the form reloads with helpful error messages, giving the user a chance to correct it.
+
+This cycle ensures clean, correct data before proceeding to send an email.
+
+### Send an Email ✉️
+If the form is valid, Django sends an email using the `send_mail` function. The email details, like subject and body, are pulled from the cleaned form data. 
+
+```python
+# views.py
+
+send_mail(
+    subject=f'Message from {form.cleaned_data["name"] or "anonymous"}',
+    message=form.cleaned_data['message'],
+    from_email=form.cleaned_data['email'],
+    recipient_list=['admin@example.com']
+)
+```
+To test this, Django can print email contents to the terminal instead of sending a real email by configuring the console email backend.
+
+```python
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+```
+
+### Redirect After POST ➡️
+To avoid duplicate form submissions (like accidentally sending the same message twice), you implement a redirect. After the form submission, instead of reloading the same page, Django redirects users to a confirmation page.
+
+```python
+from django.shortcuts import redirect
+
+...
+
+return redirect('email-sent')
+```
+
+This small improvement not only enhances user experience but also prevents repeated actions like multiple email submissions.
+
+By the end of this chapter, you've learned how to capture user input, process it on the server, validate it, and finally perform an action like sending an email. 😎
