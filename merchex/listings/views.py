@@ -52,6 +52,59 @@ def band_create(request):
                   'listings/band_create.html',
                   {'band_form': band_form})
 
+def band_update(request, band_id):
+    band = Band.objects.get(id=band_id)
+
+    band_form = None
+
+    if request.method == 'POST':
+
+        band_form = BandForm(request.POST, instance=band)
+
+        if band_form.is_valid():
+            # create an instance of Band
+            band = band_form.save()
+
+            return redirect('band-detail', band.id)
+
+        else:
+            pass
+    else:
+        band_form = BandForm(instance=band)
+
+    return render(request,
+                  'listings/band_update.html',
+                  {
+                      'band_id': band_id,
+                      'band_form': band_form,
+                  })
+
+def listing_update(request, listing_id):
+    listing = Listing.objects.get(id=listing_id)
+
+    listing_form = None
+
+    if request.method == 'POST':
+
+        listing_form = ListingForm(request.POST, instance=listing)
+
+        if listing_form.is_valid():
+            # create an instance of Band
+            listing = listing_form.save()
+
+            return redirect('listing-detail', listing.id)
+
+        else:
+            pass
+    else:
+        listing_form = ListingForm(instance=listing)
+
+    return render(request,
+                  'listings/listing_update.html',
+                  {
+                      'band_id': listing_id,
+                      'listing_form': listing_form,
+                  })
 
 def about(request):
     return render(request,

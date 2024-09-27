@@ -1035,3 +1035,39 @@ By the end of this chapter, you've learned how to generate forms from models wit
 
 ---
 
+## Chapter 15 : Update a Model Object With a ModelForm
+
+In this chapter, we learn how to **update model objects using ModelForm** in Django. The journey begins by adding a **URL pattern**, **view**, and **template** for updating a specific band in our database.
+
+### Setting Up the URL Pattern
+We’ve already set up URLs for listing bands (`bands/`), viewing individual bands (`bands/1/`, `bands/2/`, etc.), and adding new bands (`bands/add/`). 
+
+Now, we need a URL for updating a band. For this, we choose `bands/<id>/change/`, where `<id>` represents the band’s ID. This URL makes it clear that we are modifying an existing band.
+
+### Creating the View and Template
+In our view, we handle both GET and POST requests. When a user first accesses the page, a form is displayed, **pre-filled with the band's existing data**. 
+
+This is done using Django’s `instance` parameter in the form, like this:
+
+```python
+form = BandForm(instance=band)
+```
+
+Next, we need to add logic to handle the POST request when the form is submitted. If the form is valid, we save the updated data to the database and then **redirect** the user to the band’s detail page.
+
+### Reusing the ModelForm
+The beauty of Django’s forms is that we can reuse the same form for both creating and updating records. In this case, we don’t need to create a new form for updating a band. 
+
+By passing the `instance=band` argument, we can pre-populate the form with the band's current data, and then update it with any changes.
+
+### Linking to the Update Page
+We provide links to the update page from two places: 
+1. The **band list page**, where each band has an "edit" link next to it.
+2. The **band detail page**, where a more prominent "Edit this Band" link is available at the bottom.
+
+These small links guide users seamlessly into editing any band, ensuring an easy and intuitive user experience. 🎸
+
+### Conclusion
+With this chapter, you’ve learned how to set up an update view for Django models, **reuse forms**, and link the update functionality to your templates. 
+
+Now, your users can not only create but also update band records in a user-friendly way! 🎶
