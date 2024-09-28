@@ -50,5 +50,5 @@ class Listing(models.Model):
     band = models.ForeignKey(Band, null=True, on_delete=models.SET_NULL)
 
     # manual error
-    limited_edition = fields.BooleanField(default=False)
-    antiquity = fields.BooleanField(default=False)
+    # limited_edition = fields.BooleanField(default=False)
+    # antiquity = fields.BooleanField(default=False)
