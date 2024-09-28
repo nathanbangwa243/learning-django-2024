@@ -2,14 +2,13 @@
 
 {% block content %}
 
-<h1>Update Listing : {{ listing_id }}</h1>
+<h1>Delete Band</h1>
+
+<p>Are you sure you want to delete Band :  : {{ band.name }}</p>
 
 <form action="" method="post">
     {% csrf_token %}
-
-    {{ listing_form.as_p }}
-
-    <input type="submit" value="Envoyer">
+    <input type="submit" value="Confirmer">
 </form>
 
 {% endblock %}

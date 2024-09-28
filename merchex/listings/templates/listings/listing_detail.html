@@ -15,6 +15,8 @@
 <p>{{ band.biography }}</p>
 
 <a href="{% url 'listing-update' listing.id %}">Edit this listing</a>
+<a href="{% url 'listing-delete' listing.id %}">Delete this listing</a>
+
 <a href="{% url 'listing-list' %}">Retourner a tous les Listings</a>
 
 {% endblock %}
