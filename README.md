@@ -1122,3 +1122,23 @@ Flash messages can provide immediate feedback, helping users understand their ac
 
 ### Conclusion
 This chapter walks you through the process of safely deleting objects in Django, using confirmation pages to prevent accidental deletions. Users can now confidently manage their data, knowing they have a chance to review their decision before it's final. 🗑️
+
+---
+
+# Intermediate Django @2024
+
+---
+
+## Chapter 1 : Intro
+
+### Learn From a Professional Scenario
+
+In this course, you will create a full web application from start to finish - the context is outlined below:
+
+A photography collective is looking for a way to share its work with the world. They want to be able to upload their photos online and also create blog posts about them. 
+
+They have asked you, a Django developer, to build a web application that allows them to do just that. They need to have two tiers of users - subscribers and creators - and ensure that only the creators can create content. 
+
+This content then needs to be shared in a social feed, with subscribers choosing which creators they want to follow.
+
+---
