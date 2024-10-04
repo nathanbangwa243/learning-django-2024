@@ -1142,3 +1142,79 @@ They have asked you, a Django developer, to build a web application that allows 
 This content then needs to be shared in a social feed, with subscribers choosing which creators they want to follow.
 
 ---
+
+Here's the summary in a storytelling style with emojis as requested:
+
+---
+
+## Chapter 2 : Customize the User Model in Django 🎨
+
+Before we jump into customizing user authentication in Django, let's first set up the project and environment. 🎬
+
+### 1. **Project Setup 🛠️**
+We begin by creating a project directory for a photo-sharing blog named **fotoblog**. Then, we set up the Python virtual environment, install Django, and create two apps:
+- **authentication** for managing users.
+- **blog** for handling posts and photo-sharing.
+
+After setting up the environment and installing necessary packages, we make our initial Git commit and are ready to move forward. 💻
+
+### 2. **Exploring Django's User Model 🧑‍💻**
+By default, Django provides a built-in `User` model for managing user data such as usernames, emails, and passwords. 
+
+This model is feature-rich, with fields for:
+
+- **Username**, **First Name**, **Last Name**, **Email**, and **Password** (stored securely as a hash 🔒).
+- User status fields like **is_active**, **is_staff**, and **is_superuser**.
+
+However, these fields may not always match your needs, which is where customization comes in! 😎
+
+### 3. **Customizing the User Model 👩‍🎨**
+Even if you don't plan to change the default `User` model immediately, it's a best practice to implement a custom user model from the start. This prevents future migration headaches if your project grows in complexity. 
+
+Django provides two base classes you can use to create your custom user models:
+
+- **AbstractUser**: Keeps all fields of the default `User` model but allows you to add custom fields.
+- **AbstractBaseUser**: Strips down to the basics, providing just authentication-related fields, giving you full flexibility to design the model from scratch.
+
+#### Example: Adding an Account Number 🧾
+You can easily add fields like an account number by extending `AbstractUser`. For instance:
+
+```python
+class User(AbstractUser):
+    account_number = CharField(max_length=10, unique=True)
+```
+
+Or, if you don't need some fields (like `username`), you can customize the model with `AbstractBaseUser` for full control.
+
+### 4. **Creating a Custom User Model for Our App 📸**
+In our **fotoblog** app, we want to allow users to upload a profile photo and define their role (creator or subscriber). 
+
+We extend `AbstractUser` to add these fields:
+
+```python
+class User(AbstractUser):
+    CREATOR = 'CREATOR'
+    SUBSCRIBER = 'SUBSCRIBER'
+
+    class Role(models.TextChoices):
+        CREATOR = 'CREATOR'
+        SUBSCRIBER = 'SUBSCRIBER'
+
+    profile_photo = models.ImageField()
+    role = models.CharField(max_length=30, choices=Role.choices)
+```
+
+### 5. **Configuring Django to Use the Custom User Model 🔧**
+Next, we tell Django to use our custom `User` model by setting the `AUTH_USER_MODEL` in `settings.py`:
+
+```python
+AUTH_USER_MODEL = 'authentication.User'
+```
+
+### 6. **Running Migrations 🏃‍♂️**
+Before migrating, we install **[Pillow](https://pypi.org/project/pillow/)** to handle the `ImageField` for user profile photos. After that, we create and run migrations, finalizing the setup.
+
+Now, the custom user model is fully integrated into Django, ready to manage authentication with ease! 🎉
+
+---
+
