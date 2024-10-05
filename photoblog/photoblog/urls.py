@@ -15,6 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LogoutView
+
+from django.contrib.auth.views import PasswordChangeView
+from django.contrib.auth.views import PasswordChangeDoneView
+
 from django.urls import path
 
 import authentication.views
@@ -24,8 +31,28 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # authentication apps
-    path('', authentication.views.login_page, name='login'),
-    path('logout/', authentication.views.logout_user, name='logout'),
+    # path('', authentication.views.LoginPageView.as_view(), name='login'),
+    path('', LoginView.as_view(
+        template_name='authentication/login.html',
+        redirect_authenticated_user=True,
+    ), name='login'),
+
+    # path('logout/', authentication.views.LogoutUserView.as_view(), name='logout'),
+    path('logout/', LogoutView.as_view(
+        next_page='login',
+    ), name='logout'),
+
+    # Changes Password
+    path('password-change/',
+         PasswordChangeView.as_view(template_name='authentication/password_change.html',
+                                    success_url='/password-change-done/'),
+         name='password_change'),
+
+    path('password-change-done/',
+         PasswordChangeDoneView.as_view(template_name='authentication/change_password_done.html'),
+         name='password_change_done'),
+
+    # BLOGS APPS
     path('home/', blog.views.home, name='home'),
 
 ]

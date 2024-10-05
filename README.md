@@ -1339,3 +1339,91 @@ With the login system fully implemented, users can now securely log into their a
 In the next chapter, we will explore how to enhance user sessions and add additional security features! 🎉
 
 ---
+
+## Chapter 4: Create a Login Page With Class-Based Views 🏗️
+
+After setting up the login page using function-based views (FBVs), it's time to explore a more structured and flexible approach—**class-based views (CBVs)**. 
+
+This chapter will guide you through `refactoring` the previous login system into a class-based structure, offering better organization and maintainability. 🌟
+
+### 1. **Introduction to Class-Based Views (CBVs) 🤔**
+Class-based views allow us to represent views as classes rather than functions. Unlike FBVs that handle different HTTP methods in a single function, CBVs split this logic across separate methods like `get` and `post`. 
+
+This makes the code easier to maintain and extend over time. 💡
+
+### 2. **Refactoring the Login View to a Class-Based View 🔄**
+In this step, we will convert the `login_view` FBV into a class-based view, `LoginPageView`. 
+
+The logic remains the same, but the structure is more modular:
+
+- **GET method**: Handles displaying the login form.
+- **POST method**: Handles form submission and user authentication.
+
+Here’s the new class-based view:
+```python
+from django.views import View
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from .forms import LoginForm
+
+class LoginPageView(View):
+    template_name = 'login.html'
+    form_class = LoginForm
+
+    def get(self, request):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+            error_message = 'Invalid credentials'
+        return render(request, self.template_name, {'form': form, 'error_message': error_message})
+```
+In this version, the `get` and `post` methods handle requests separately, providing cleaner, more organized code. 🎯
+
+### 3. **Adding the URL Pattern 🔗**
+To use the class-based view in Django, we need to update the URL configuration by calling `as_view()` on the class.
+
+```python
+from django.urls import path
+from .views import LoginPageView
+
+urlpatterns = [
+    path('login/', LoginPageView.as_view(), name='login'),
+]
+```
+This `as_view()` method converts the class into a view that Django can recognize. 🚀
+
+### 4. **Why Class-Based Views? 🤷**
+The advantage of using CBVs is the ability to reuse and extend the class easily. For instance, we can change templates or form logic by subclassing the `LoginPageView`. 
+
+CBVs offer greater flexibility and scalability for larger projects. 🏗️
+
+### 5. **Leveraging Generic Views for Authentication ⚙️**
+Django offers generic views, which further simplify common tasks like authentication. Instead of writing custom login logic, you can use the built-in `LoginView`. 
+
+This allows you to focus on customizing the interface while letting Django handle the backend logic.
+
+Example:
+```python
+from django.contrib.auth.views import LoginView
+
+urlpatterns = [
+    path('login/', LoginView.as_view(template_name='login.html'), name='login'),
+]
+```
+Using generic views reduces repetitive code, providing a cleaner and faster implementation. 💼
+
+### 6. **Conclusion 🏁**
+By refactoring the login page into a class-based view, we’ve created a more modular and maintainable authentication system. This structure will be easier to extend and scale as the project grows. 
+
+Now that we have implemented the authentication views, let's build the site's signup functionality.
+
+---
