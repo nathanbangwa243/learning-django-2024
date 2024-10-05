@@ -1122,3 +1122,455 @@ Flash messages can provide immediate feedback, helping users understand their ac
 
 ### Conclusion
 This chapter walks you through the process of safely deleting objects in Django, using confirmation pages to prevent accidental deletions. Users can now confidently manage their data, knowing they have a chance to review their decision before it's final. 🗑️
+
+---
+
+# Intermediate Django @2024
+
+---
+
+## Chapter 1 : Intro
+
+### Learn From a Professional Scenario
+
+In this course, you will create a full web application from start to finish - the context is outlined below:
+
+A photography collective is looking for a way to share its work with the world. They want to be able to upload their photos online and also create blog posts about them. 
+
+They have asked you, a Django developer, to build a web application that allows them to do just that. They need to have two tiers of users - subscribers and creators - and ensure that only the creators can create content. 
+
+This content then needs to be shared in a social feed, with subscribers choosing which creators they want to follow.
+
+---
+
+Here's the summary in a storytelling style with emojis as requested:
+
+---
+
+## Chapter 2 : Customize the User Model in Django 🎨
+
+Before we jump into customizing user authentication in Django, let's first set up the project and environment. 🎬
+
+### 1. **Project Setup 🛠️**
+We begin by creating a project directory for a photo-sharing blog named **fotoblog**. Then, we set up the Python virtual environment, install Django, and create two apps:
+- **authentication** for managing users.
+- **blog** for handling posts and photo-sharing.
+
+After setting up the environment and installing necessary packages, we make our initial Git commit and are ready to move forward. 💻
+
+### 2. **Exploring Django's User Model 🧑‍💻**
+By default, Django provides a built-in `User` model for managing user data such as usernames, emails, and passwords. 
+
+This model is feature-rich, with fields for:
+
+- **Username**, **First Name**, **Last Name**, **Email**, and **Password** (stored securely as a hash 🔒).
+- User status fields like **is_active**, **is_staff**, and **is_superuser**.
+
+However, these fields may not always match your needs, which is where customization comes in! 😎
+
+### 3. **Customizing the User Model 👩‍🎨**
+Even if you don't plan to change the default `User` model immediately, it's a best practice to implement a custom user model from the start. This prevents future migration headaches if your project grows in complexity. 
+
+Django provides two base classes you can use to create your custom user models:
+
+- **AbstractUser**: Keeps all fields of the default `User` model but allows you to add custom fields.
+- **AbstractBaseUser**: Strips down to the basics, providing just authentication-related fields, giving you full flexibility to design the model from scratch.
+
+#### Example: Adding an Account Number 🧾
+You can easily add fields like an account number by extending `AbstractUser`. For instance:
+
+```python
+class User(AbstractUser):
+    account_number = CharField(max_length=10, unique=True)
+```
+
+Or, if you don't need some fields (like `username`), you can customize the model with `AbstractBaseUser` for full control.
+
+### 4. **Creating a Custom User Model for Our App 📸**
+In our **fotoblog** app, we want to allow users to upload a profile photo and define their role (creator or subscriber). 
+
+We extend `AbstractUser` to add these fields:
+
+```python
+class User(AbstractUser):
+    CREATOR = 'CREATOR'
+    SUBSCRIBER = 'SUBSCRIBER'
+
+    class Role(models.TextChoices):
+        CREATOR = 'CREATOR'
+        SUBSCRIBER = 'SUBSCRIBER'
+
+    profile_photo = models.ImageField()
+    role = models.CharField(max_length=30, choices=Role.choices)
+```
+
+### 5. **Configuring Django to Use the Custom User Model 🔧**
+Next, we tell Django to use our custom `User` model by setting the `AUTH_USER_MODEL` in `settings.py`:
+
+```python
+AUTH_USER_MODEL = 'authentication.User'
+```
+
+### 6. **Running Migrations 🏃‍♂️**
+Before migrating, we install **[Pillow](https://pypi.org/project/pillow/)** to handle the `ImageField` for user profile photos. After that, we create and run migrations, finalizing the setup.
+
+Now, the custom user model is fully integrated into Django, ready to manage authentication with ease! 🎉
+
+---
+
+## Chapter 3: Create a Login Page with Function-Based Views 🔐
+
+Now that we’ve customized the User model to fit the needs of our **fotoblog** app, the next step is enabling users to log in to their accounts. This chapter guides you through creating a login page using Django's function-based views.
+
+### 1. **Understanding Function-Based Views (FBVs) 🧑‍💻**
+
+Function-based views in Django allow you to handle web requests with simple Python functions. For our login page, we will build an FBV to manage both GET and POST requests.
+
+The GET request will display the login form, while the POST request will process the submitted data to authenticate the user.
+
+### 2. **Building the Login Form 📝**
+
+We start by creating a `LoginForm` class in `forms.py`. This form will capture the username and password from users. To keep passwords secure, we use Django’s `PasswordInput` widget to mask the input field.
+
+Example of the form:
+```python
+from django import forms
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=150)
+    password = forms.CharField(widget=forms.PasswordInput)
+```
+
+### 3. **Creating the Login View 📲**
+In `views.py`, we define the `login_view` function. This function will handle both displaying the form and processing the submitted data. 
+
+Django's built-in `authenticate` function checks if the provided credentials are correct, and `login` logs the user in.
+
+Here’s how the view is structured:
+
+```python
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from .forms import LoginForm
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')  # Redirect to home page after successful login
+            else:
+                error_message = 'Invalid credentials'
+        else:
+            error_message = 'Form is not valid'
+    else:
+        form = LoginForm()
+    return render(request, 'login.html', {'form': form})
+```
+
+### 4. **Designing the Login Template 🎨**
+The login page is created as `login.html` in the templates directory. This template extends the base template and contains the login form. 
+
+Additionally, it includes CSRF protection to ensure secure communication between the client and server.
+
+Basic structure of the login template:
+
+```html
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+  </form>
+  {% if error_message %}
+    <p style="color:red;">{{ error_message }}</p>
+  {% endif %}
+{% endblock %}
+```
+
+### 5. **Mapping the Login View to a URL 🌐**
+To make the login page accessible, we define a URL pattern in `urls.py`:
+
+```python
+from django.urls import path
+from .views import login_view
+
+urlpatterns = [
+    path('login/', login_view, name='login'),
+]
+```
+
+### 6. **Testing and Adding Logout 🧪**
+Once the login system is set up, you can test it by creating a test user using the Django shell. After logging in successfully, you’ll want to add a logout option. 
+
+This can be easily implemented by using Django’s built-in `logout` function.
+
+```python
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')  # Redirect back to the login page after logging out
+```
+
+### 7. **Restricting Pages to Logged-In Users Only 🔒**
+To restrict access to certain pages for authenticated users only, Django provides the `login_required` decorator. This ensures that users must be logged in before accessing those views.
+
+Example:
+```python
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def home_view(request):
+    return render(request, 'home.html')
+```
+
+### 8. **Conclusion 🏁**
+With the login system fully implemented, users can now securely log into their accounts on **fotoblog**. This login system not only handles authentication but also redirects users to the appropriate pages based on their login status. 
+
+In the next chapter, we will explore how to enhance user sessions and add additional security features! 🎉
+
+---
+
+## Chapter 4: Create a Login Page With Class-Based Views 🏗️
+
+After setting up the login page using function-based views (FBVs), it's time to explore a more structured and flexible approach—**class-based views (CBVs)**. 
+
+This chapter will guide you through `refactoring` the previous login system into a class-based structure, offering better organization and maintainability. 🌟
+
+### 1. **Introduction to Class-Based Views (CBVs) 🤔**
+Class-based views allow us to represent views as classes rather than functions. Unlike FBVs that handle different HTTP methods in a single function, CBVs split this logic across separate methods like `get` and `post`. 
+
+This makes the code easier to maintain and extend over time. 💡
+
+### 2. **Refactoring the Login View to a Class-Based View 🔄**
+In this step, we will convert the `login_view` FBV into a class-based view, `LoginPageView`. 
+
+The logic remains the same, but the structure is more modular:
+
+- **GET method**: Handles displaying the login form.
+- **POST method**: Handles form submission and user authentication.
+
+Here’s the new class-based view:
+```python
+from django.views import View
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from .forms import LoginForm
+
+class LoginPageView(View):
+    template_name = 'login.html'
+    form_class = LoginForm
+
+    def get(self, request):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+            error_message = 'Invalid credentials'
+        return render(request, self.template_name, {'form': form, 'error_message': error_message})
+```
+In this version, the `get` and `post` methods handle requests separately, providing cleaner, more organized code. 🎯
+
+### 3. **Adding the URL Pattern 🔗**
+To use the class-based view in Django, we need to update the URL configuration by calling `as_view()` on the class.
+
+```python
+from django.urls import path
+from .views import LoginPageView
+
+urlpatterns = [
+    path('login/', LoginPageView.as_view(), name='login'),
+]
+```
+This `as_view()` method converts the class into a view that Django can recognize. 🚀
+
+### 4. **Why Class-Based Views? 🤷**
+The advantage of using CBVs is the ability to reuse and extend the class easily. For instance, we can change templates or form logic by subclassing the `LoginPageView`. 
+
+CBVs offer greater flexibility and scalability for larger projects. 🏗️
+
+### 5. **Leveraging Generic Views for Authentication ⚙️**
+Django offers generic views, which further simplify common tasks like authentication. Instead of writing custom login logic, you can use the built-in `LoginView`. 
+
+This allows you to focus on customizing the interface while letting Django handle the backend logic.
+
+Example:
+```python
+from django.contrib.auth.views import LoginView
+
+urlpatterns = [
+    path('login/', LoginView.as_view(template_name='login.html'), name='login'),
+]
+```
+Using generic views reduces repetitive code, providing a cleaner and faster implementation. 💼
+
+### 6. **Conclusion 🏁**
+By refactoring the login page into a class-based view, we’ve created a more modular and maintainable authentication system. This structure will be easier to extend and scale as the project grows. 
+
+Now that we have implemented the authentication views, let's build the site's signup functionality.
+
+---
+
+## Chapter 5: Create a Sign-Up Page 📝
+
+After establishing a structured login system using class-based views (CBVs), the next logical step is to implement user registration. 
+
+In this chapter, we will create a **sign-up page**, allowing users to register and create their accounts. Like the login process, we'll leverage Django’s built-in tools and customize them to fit our specific needs. 
+
+### 1. **Extending the UserCreationForm ✍️**
+
+Django provides a pre-built **UserCreationForm** that simplifies user registration by managing common fields like `username` and `password`. However, in many applications, additional fields such as `email`, `first_name`, or `role` are necessary. 
+
+To accommodate this, we’ll extend the `UserCreationForm` by adding these fields.
+
+Here’s a custom form example:
+
+```python
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+```
+
+This custom form now includes an email field, allowing us to gather more user data upon registration.
+
+### 2. **Creating the Sign-Up View 👤**
+
+With the form ready, we need a view to handle user registration. We’ll create a class-based view, `SignUpView`, to process user input, validate the form, and save new users to the database.
+
+Here’s the class-based view:
+
+```python
+from django.views import View
+from django.shortcuts import render, redirect
+from .forms import CustomUserCreationForm
+
+class SignUpView(View):
+    template_name = 'authentication/signup.html'
+    form_class = CustomUserCreationForm
+
+    def get(self, request):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')
+        return render(request, self.template_name, {'form': form})
+```
+
+This view handles both **GET** requests (displaying the empty form) and **POST** requests (processing form data and creating a new user).
+
+### 3. **Creating the Sign-Up Template 🎨**
+
+The next step is to design the user interface for the sign-up page. We’ll create a simple HTML template to display the form, ensuring it follows the same styling as the login page for consistency.
+
+Here’s a sample template (`signup.html`):
+
+```html
+<h2>Sign Up</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Register</button>
+</form>
+```
+
+This form includes CSRF protection and uses Django’s built-in form rendering with `as_p` for simple layout.
+
+### 4. **Adding the Sign-Up URL 🌐**
+
+We must now add a URL pattern for the sign-up page to make it accessible to users. In the `urls.py` file, we define a route for the `SignUpView`.
+
+```python
+from django.urls import path
+from .views import SignUpView
+
+urlpatterns = [
+    path('signup/', SignUpView.as_view(), name='signup'),
+]
+```
+
+This ensures that users can visit `/signup/` to access the registration page.
+
+### 5. **Handling Password Validation and Security 🔐**
+
+To ensure strong password policies, Django includes built-in password validators. These can be customized in the settings file to require a combination of letters, numbers, and special characters. 
+
+Password security is critical for protecting user accounts, so enabling these validators is highly recommended.
+
+Example of a password validator configuration:
+
+```python
+# authentication/validators.py
+from django.core.exceptions import ValidationError
+
+class ContainsNumberValidator:
+    def validate(self, password, user=None):
+        if not any(char.isdigit() for char in password):
+            raise ValidationError(
+                'The password must contain a number',
+                code='password_no_numbers'
+            )
+
+    def get_help_text(self):
+        return 'Your password must contain at least one number.'
+```
+
+```python
+# photoblog/settings.py
+
+AUTH_PASSWORD_VALIDATORS = [
+   
+   # DJANGO DEFAULT VALIDATORS
+   {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+   {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+   
+   # CUSTOM VALIDATORS
+   {
+      'NAME': 'authentication.validators.ContainsNumberValidator',
+   },
+]
+```
+
+### 6. **Next Steps: Email Verification and More Advanced Features 📧**
+
+While the basic sign-up process is now in place, we can further improve the user experience and security by adding features like **email verification**. 
+
+Django provides **[third-party packages](https://djangopackages.org/)** for handling email confirmation, which ensures that users provide a valid email address during registration. 
+
+Additionally, you could integrate **[social media logins](https://medium.com/@michal.drozdze/django-rest-framework-jwt-authentication-social-login-login-with-google-8911332f1008)** to simplify the process for users by allowing them to register with their existing accounts from platforms like Google or Facebook.
+
+### 7. **Conclusion 🏁**
+
+In this chapter, we built a **sign-up page** using Django’s **UserCreationForm** and class-based views, making it easy for users to register for an account. 
+
+This flexible approach will enable future enhancements like email verification and password strength enforcement.
+
+--- 
+
