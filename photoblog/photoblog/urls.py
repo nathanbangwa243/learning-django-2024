@@ -42,6 +42,8 @@ urlpatterns = [
         next_page='login',
     ), name='logout'),
 
+    path('signup/', authentication.views.SignUpView.as_view(), name='signup'),
+
     # Changes Password
     path('password-change/',
          PasswordChangeView.as_view(template_name='authentication/password_change.html',

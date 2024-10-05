@@ -1427,3 +1427,150 @@ By refactoring the login page into a class-based view, we’ve created a more mo
 Now that we have implemented the authentication views, let's build the site's signup functionality.
 
 ---
+
+## Chapter 5: Create a Sign-Up Page 📝
+
+After establishing a structured login system using class-based views (CBVs), the next logical step is to implement user registration. 
+
+In this chapter, we will create a **sign-up page**, allowing users to register and create their accounts. Like the login process, we'll leverage Django’s built-in tools and customize them to fit our specific needs. 
+
+### 1. **Extending the UserCreationForm ✍️**
+
+Django provides a pre-built **UserCreationForm** that simplifies user registration by managing common fields like `username` and `password`. However, in many applications, additional fields such as `email`, `first_name`, or `role` are necessary. 
+
+To accommodate this, we’ll extend the `UserCreationForm` by adding these fields.
+
+Here’s a custom form example:
+
+```python
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+```
+
+This custom form now includes an email field, allowing us to gather more user data upon registration.
+
+### 2. **Creating the Sign-Up View 👤**
+
+With the form ready, we need a view to handle user registration. We’ll create a class-based view, `SignUpView`, to process user input, validate the form, and save new users to the database.
+
+Here’s the class-based view:
+
+```python
+from django.views import View
+from django.shortcuts import render, redirect
+from .forms import CustomUserCreationForm
+
+class SignUpView(View):
+    template_name = 'authentication/signup.html'
+    form_class = CustomUserCreationForm
+
+    def get(self, request):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')
+        return render(request, self.template_name, {'form': form})
+```
+
+This view handles both **GET** requests (displaying the empty form) and **POST** requests (processing form data and creating a new user).
+
+### 3. **Creating the Sign-Up Template 🎨**
+
+The next step is to design the user interface for the sign-up page. We’ll create a simple HTML template to display the form, ensuring it follows the same styling as the login page for consistency.
+
+Here’s a sample template (`signup.html`):
+
+```html
+<h2>Sign Up</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Register</button>
+</form>
+```
+
+This form includes CSRF protection and uses Django’s built-in form rendering with `as_p` for simple layout.
+
+### 4. **Adding the Sign-Up URL 🌐**
+
+We must now add a URL pattern for the sign-up page to make it accessible to users. In the `urls.py` file, we define a route for the `SignUpView`.
+
+```python
+from django.urls import path
+from .views import SignUpView
+
+urlpatterns = [
+    path('signup/', SignUpView.as_view(), name='signup'),
+]
+```
+
+This ensures that users can visit `/signup/` to access the registration page.
+
+### 5. **Handling Password Validation and Security 🔐**
+
+To ensure strong password policies, Django includes built-in password validators. These can be customized in the settings file to require a combination of letters, numbers, and special characters. 
+
+Password security is critical for protecting user accounts, so enabling these validators is highly recommended.
+
+Example of a password validator configuration:
+
+```python
+# authentication/validators.py
+from django.core.exceptions import ValidationError
+
+class ContainsNumberValidator:
+    def validate(self, password, user=None):
+        if not any(char.isdigit() for char in password):
+            raise ValidationError(
+                'The password must contain a number',
+                code='password_no_numbers'
+            )
+
+    def get_help_text(self):
+        return 'Your password must contain at least one number.'
+```
+
+```python
+# photoblog/settings.py
+
+AUTH_PASSWORD_VALIDATORS = [
+   
+   # DJANGO DEFAULT VALIDATORS
+   {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+   {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+   
+   # CUSTOM VALIDATORS
+   {
+      'NAME': 'authentication.validators.ContainsNumberValidator',
+   },
+]
+```
+
+### 6. **Next Steps: Email Verification and More Advanced Features 📧**
+
+While the basic sign-up process is now in place, we can further improve the user experience and security by adding features like **email verification**. 
+
+Django provides **[third-party packages](https://djangopackages.org/)** for handling email confirmation, which ensures that users provide a valid email address during registration. 
+
+Additionally, you could integrate **[social media logins](https://medium.com/@michal.drozdze/django-rest-framework-jwt-authentication-social-login-login-with-google-8911332f1008)** to simplify the process for users by allowing them to register with their existing accounts from platforms like Google or Facebook.
+
+### 7. **Conclusion 🏁**
+
+In this chapter, we built a **sign-up page** using Django’s **UserCreationForm** and class-based views, making it easy for users to register for an account. 
+
+This flexible approach will enable future enhancements like email verification and password strength enforcement.
+
+--- 
+
