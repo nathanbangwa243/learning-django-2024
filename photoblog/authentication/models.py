@@ -12,3 +12,6 @@ class User(AbstractUser):
 
     profile_photo = models.ImageField()
     role = models.CharField(max_length=30, choices=Role.choices)
+
+    def __str__(self):
+        return self.username

@@ -1218,3 +1218,124 @@ Now, the custom user model is fully integrated into Django, ready to manage auth
 
 ---
 
+## Chapter 3: Create a Login Page with Function-Based Views 🔐
+
+Now that we’ve customized the User model to fit the needs of our **fotoblog** app, the next step is enabling users to log in to their accounts. This chapter guides you through creating a login page using Django's function-based views.
+
+### 1. **Understanding Function-Based Views (FBVs) 🧑‍💻**
+
+Function-based views in Django allow you to handle web requests with simple Python functions. For our login page, we will build an FBV to manage both GET and POST requests.
+
+The GET request will display the login form, while the POST request will process the submitted data to authenticate the user.
+
+### 2. **Building the Login Form 📝**
+
+We start by creating a `LoginForm` class in `forms.py`. This form will capture the username and password from users. To keep passwords secure, we use Django’s `PasswordInput` widget to mask the input field.
+
+Example of the form:
+```python
+from django import forms
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=150)
+    password = forms.CharField(widget=forms.PasswordInput)
+```
+
+### 3. **Creating the Login View 📲**
+In `views.py`, we define the `login_view` function. This function will handle both displaying the form and processing the submitted data. 
+
+Django's built-in `authenticate` function checks if the provided credentials are correct, and `login` logs the user in.
+
+Here’s how the view is structured:
+
+```python
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from .forms import LoginForm
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')  # Redirect to home page after successful login
+            else:
+                error_message = 'Invalid credentials'
+        else:
+            error_message = 'Form is not valid'
+    else:
+        form = LoginForm()
+    return render(request, 'login.html', {'form': form})
+```
+
+### 4. **Designing the Login Template 🎨**
+The login page is created as `login.html` in the templates directory. This template extends the base template and contains the login form. 
+
+Additionally, it includes CSRF protection to ensure secure communication between the client and server.
+
+Basic structure of the login template:
+
+```html
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+  </form>
+  {% if error_message %}
+    <p style="color:red;">{{ error_message }}</p>
+  {% endif %}
+{% endblock %}
+```
+
+### 5. **Mapping the Login View to a URL 🌐**
+To make the login page accessible, we define a URL pattern in `urls.py`:
+
+```python
+from django.urls import path
+from .views import login_view
+
+urlpatterns = [
+    path('login/', login_view, name='login'),
+]
+```
+
+### 6. **Testing and Adding Logout 🧪**
+Once the login system is set up, you can test it by creating a test user using the Django shell. After logging in successfully, you’ll want to add a logout option. 
+
+This can be easily implemented by using Django’s built-in `logout` function.
+
+```python
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')  # Redirect back to the login page after logging out
+```
+
+### 7. **Restricting Pages to Logged-In Users Only 🔒**
+To restrict access to certain pages for authenticated users only, Django provides the `login_required` decorator. This ensures that users must be logged in before accessing those views.
+
+Example:
+```python
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def home_view(request):
+    return render(request, 'home.html')
+```
+
+### 8. **Conclusion 🏁**
+With the login system fully implemented, users can now securely log into their accounts on **fotoblog**. This login system not only handles authentication but also redirects users to the appropriate pages based on their login status. 
+
+In the next chapter, we will explore how to enhance user sessions and add additional security features! 🎉
+
+---
