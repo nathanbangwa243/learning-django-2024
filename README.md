@@ -1711,3 +1711,120 @@ Now that users can upload photos for their blog posts, the next step could be to
 
 In this chapter, we implemented an image upload feature using Django's **ImageField** and **ModelForm**, allowing users to attach photos to their blog posts. This functionality will make the blog more dynamic and visually engaging.
 
+---
+
+## Chapter 7: Add a Blog Post Creation Facility 📝
+
+After enabling users to upload images, the next step is allowing them to create blog posts. In this chapter, we’ll integrate a **blog post creation feature**, where users can write posts, upload images, and enhance their content seamlessly.
+
+### 1. **Define the Blog Post Model 🖋️**
+
+We’ll begin by creating a `Blog` model to store the content of each blog post. This model will include fields for the title, content, and an optional photo that can be attached to each post.
+
+```python
+from django.db import models
+from .models import Photo
+from django.contrib.auth.models import User
+
+class Blog(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    photo = models.ForeignKey(Photo, on_delete=models.SET_NULL, null=True, blank=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+```
+
+Here, the `photo` field is optional, allowing users to create blog posts with or without an image.
+
+### 2. **Create Blog and Photo Forms 📝**
+
+Next, we need forms for both the `Blog` and `Photo` models to handle the user inputs. We already have a `PhotoForm`, so we’ll create a `BlogForm` that gathers the post’s title and content.
+
+```python
+from django import forms
+from .models import Blog
+
+class BlogForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = ['title', 'content']
+```
+
+### 3. **Build the Blog Creation View 💻**
+
+We’ll now create a view that handles both the `BlogForm` and `PhotoForm` together. This view will ensure that users can upload a photo and write a blog post in one step.
+
+```python
+from django.shortcuts import render, redirect
+from .forms import BlogForm, PhotoForm
+
+def create_blog(request):
+    if request.method == 'POST':
+        blog_form = BlogForm(request.POST)
+        photo_form = PhotoForm(request.POST, request.FILES)
+        if blog_form.is_valid() and photo_form.is_valid():
+            photo = photo_form.save(commit=False)
+            photo.user = request.user
+            photo.save()
+            blog = blog_form.save(commit=False)
+            blog.author = request.user
+            blog.photo = photo
+            blog.save()
+            return redirect('blog_list')
+    else:
+        blog_form = BlogForm()
+        photo_form = PhotoForm()
+    return render(request, 'blog/create_blog.html', {'blog_form': blog_form, 'photo_form': photo_form})
+```
+
+### 4. **Create the Blog Creation Template 🎨**
+
+We’ll create a template that includes both forms, allowing users to write blog posts and upload images simultaneously.
+
+```html
+<h2>Create a Blog Post</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ blog_form.as_p }}
+    {{ photo_form.as_p }}
+    <button type="submit">Create Blog Post</button>
+</form>
+```
+
+### 5. **Add the URL Pattern 🌐**
+
+Finally, we add a URL pattern to link the view to the blog creation page.
+
+```python
+path('blog/create/', create_blog, name='create_blog'),
+```
+
+### 6. **Display Blog Posts 🖼️**
+
+Once users create blog posts, we need to display them. We can create a view to list all the blog posts and their attached images.
+
+```html
+<h2>Recent Blog Posts</h2>
+<ul>
+    {% for blog in blogs %}
+    <li>
+        <h3>{{ blog.title }}</h3>
+        <p>{{ blog.content }}</p>
+        {% if blog.photo %}
+        <img src="{{ blog.photo.image.url }}" alt="{{ blog.photo.caption }}">
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+```
+
+### 7. **Conclusion 🏁**
+
+In this chapter, we added a **blog post creation feature** that allows users to write posts, upload photos, and personalize their content. 
+
+This addition makes the blog platform more interactive and user-friendly, providing a space for users to express their thoughts and showcase their images.
+
+---

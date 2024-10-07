@@ -61,12 +61,15 @@ urlpatterns = [
     path('profile-photo/upload/', authentication.views.UploadProfilePhoto.as_view(), name='upload_profile_photo'),
 
     # BLOGS APPS
-    path('home/', blog.views.home, name='home'),
+    path('home/', blog.views.HomeView.as_view(), name='home'),
 
     path('photo/upload/', blog.views.PhotoUploadView.as_view(), name='photo_upload'),
 
-]
+    path('blog/create', blog.views.BlogAndPhotoUploadView.as_view(), name='blog_create'),
 
+    path('blog/<int:blog_id>', blog.views.ViewBlogView.as_view(), name='view_blog'),
+
+]
 
 # include static medias
 if settings.DEBUG:
