@@ -16,6 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.views import LogoutView
 
@@ -54,7 +57,18 @@ urlpatterns = [
          PasswordChangeDoneView.as_view(template_name='authentication/change_password_done.html'),
          name='password_change_done'),
 
+    # Profile management
+    path('profile-photo/upload/', authentication.views.UploadProfilePhoto.as_view(), name='upload_profile_photo'),
+
     # BLOGS APPS
     path('home/', blog.views.home, name='home'),
 
+    path('photo/upload/', blog.views.PhotoUploadView.as_view(), name='photo_upload'),
+
 ]
+
+
+# include static medias
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

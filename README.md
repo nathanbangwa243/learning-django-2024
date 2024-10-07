@@ -1574,3 +1574,140 @@ This flexible approach will enable future enhancements like email verification a
 
 --- 
 
+## Chapter 6: Add an Image Upload Facility to Your Blog 🖼️
+
+Now that users can create accounts through the sign-up page, it's time to allow them to enhance their blog posts with images. 
+
+In this chapter, we’ll implement an **image upload feature**, enabling users to attach photos to their blog entries and personalize their content.
+
+### 1. **Defining the Photo Model 📷**
+
+We’ll begin by creating a model to store information about the uploaded images. This includes fields for the image file and a caption to describe the photo.
+
+Here’s the `Photo` model:
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+
+class Photo(models.Model):
+    image = models.ImageField(upload_to='photos/')
+    caption = models.CharField(max_length=255, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.caption if self.caption else 'No Caption'
+```
+
+This model uses Django's **ImageField** to handle image uploads and connects each photo to a user via a `ForeignKey`. The `upload_to` argument ensures that uploaded files are stored in a specific directory within your project.
+
+### 2. **Configuring Media Settings 🛠️**
+
+To manage media files like images, you need to configure Django to handle uploads properly. We do this by defining the `MEDIA_URL` and `MEDIA_ROOT` in the **settings.py** file.
+
+```python
+# photoblog/settings.py
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR.joinpath('media/')
+```
+
+These settings tell Django where to store uploaded files and how to make them accessible during development.
+
+### 3. **Creating a Photo Upload Form 📝**
+
+Next, we’ll create a form that users can use to upload their images. This form is built using Django's `ModelForm`, which automatically generates fields based on the `Photo` model.
+
+```python
+from django import forms
+from .models import Photo
+
+class PhotoForm(forms.ModelForm):
+    class Meta:
+        model = Photo
+        fields = ['image', 'caption']
+```
+
+With this form, users can select an image from their device and add a caption before submitting the form.
+
+### 4. **Building the Photo Upload View 📥**
+
+We’ll create a view to handle the upload form. This view will manage both GET and POST requests, displaying the form and processing the uploaded image.
+
+```python
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import PhotoForm
+
+@login_required
+def upload_photo(request):
+    if request.method == 'POST':
+        form = PhotoForm(request.POST, request.FILES)
+        if form.is_valid():
+            photo = form.save(commit=False)
+            photo.user = request.user
+            photo.save()
+            return redirect('profile')
+    else:
+        form = PhotoForm()
+    return render(request, 'blog/upload_photo.html', {'form': form})
+```
+
+This view ensures that only logged-in users can upload photos, and it saves the image and caption to the database.
+
+### 5. **Creating the Upload Template 🎨**
+
+We’ll now design a simple HTML template to display the photo upload form.
+
+```html
+<h2>Upload a Photo</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Upload</button>
+</form>
+```
+
+The form includes the `enctype="multipart/form-data"` attribute to handle file uploads properly.
+
+### 6. **Adding the URL Pattern 🌐**
+
+Finally, we’ll add a URL pattern for the photo upload view to make it accessible to users.
+
+```python
+# blog/urls.py
+from django.urls import path
+from .views import upload_photo
+
+urlpatterns = [
+    path('upload/', upload_photo, name='upload_photo'),
+]
+```
+
+Now users can visit `/upload/` to access the photo upload page.
+
+### 7. **Displaying Uploaded Photos 🖼️**
+
+Once users have uploaded photos, we need to display them. This can be done by fetching the uploaded images and displaying them in the user’s profile or blog feed.
+
+```html
+<h2>{{ user.username }}'s Photos</h2>
+<ul>
+    {% for photo in user.photo_set.all %}
+    <li>
+        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}">
+        <p>{{ photo.caption }}</p>
+    </li>
+    {% endfor %}
+</ul>
+```
+
+This template loops through the user’s uploaded photos and displays each image along with its caption.
+
+### 8. **Next Steps: Adding Profile Pictures 👤**
+
+Now that users can upload photos for their blog posts, the next step could be to add profile pictures for each user. This enhances personalization and improves user engagement on the platform.
+
+### 9. **Conclusion 🏁**
+
+In this chapter, we implemented an image upload feature using Django's **ImageField** and **ModelForm**, allowing users to attach photos to their blog posts. This functionality will make the blog more dynamic and visually engaging.
+

@@ -59,8 +59,9 @@ class LogoutUserView(View, LoginRequiredMixin):
         logout(request)
         return redirect('login')
 
+
 class SignUpView(View):
-    template_name ="authentication/signup.html"
+    template_name = "authentication/signup.html"
     form_class = forms.SignUpForm
 
     def get(self, request):
@@ -85,6 +86,30 @@ class SignUpView(View):
             return render(request,
                           self.template_name,
                           context={'form': form})
+
+
+class UploadProfilePhoto(View, LoginRequiredMixin):
+    template_name = "authentication/upload_profile_photo.html"
+    form_class = forms.UploadProfilePhotoForm
+
+    def get(self, request):
+        form = self.form_class(instance=request.user)
+
+        return render(request,
+                      self.template_name,
+                      context={'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST, request.FILES, instance=request.user)
+
+        if form.is_valid():
+            form.save()
+
+            return redirect('home')
+
+        return render(request,
+                      self.template_name,
+                      context={'form': form})
 
 
 # FUNCTIONS BASE-VIEWS
