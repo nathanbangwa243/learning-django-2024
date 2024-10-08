@@ -64,10 +64,13 @@ urlpatterns = [
     path('home/', blog.views.HomeView.as_view(), name='home'),
 
     path('photo/upload/', blog.views.PhotoUploadView.as_view(), name='photo_upload'),
+    path('photo/upload-multiple/', blog.views.CreateMultiplePhotos.as_view(), name='create_multiple_photos'),
 
     path('blog/create', blog.views.BlogAndPhotoUploadView.as_view(), name='blog_create'),
 
     path('blog/<int:blog_id>', blog.views.ViewBlogView.as_view(), name='view_blog'),
+
+    path('blog/<int:blog_id>/edit', blog.views.EditBlogView.as_view(), name='edit_blog'),
 
 ]
 

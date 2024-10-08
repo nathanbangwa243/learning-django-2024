@@ -1828,3 +1828,128 @@ In this chapter, we added a **blog post creation feature** that allows users to 
 This addition makes the blog platform more interactive and user-friendly, providing a space for users to express their thoughts and showcase their images.
 
 ---
+
+## Chapter 8: Include Multiple Forms on the Same Page 📝
+
+Building on the blog post creation facility, the next step is enhancing user interactions by allowing them to **manage multiple forms** on the same page. 
+
+In this chapter, we’ll explore how users can edit or delete a blog post simultaneously, providing a more seamless experience.
+
+### 1. **Defining Multiple Forms 🖋️**
+
+We'll start by defining two forms for handling different tasks on the same page:
+
+- **BlogForm**: To allow users to **edit** their blog posts.
+- **DeleteBlogForm**: To enable users to **delete** a blog post.
+
+By creating these forms, we give users the ability to manage their posts without leaving the current page.
+
+```python
+from django import forms
+from .models import Blog
+
+class BlogForm(forms.ModelForm):
+    edit_blog = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+
+    class Meta:
+        model = models.Blog
+        fields = ['title', 'content']
+
+
+class DeleteBlogForm(forms.Form):
+    delete_blog = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+```
+
+### 2. **Handling Multiple Forms in the View 👨‍💻**
+
+To process both forms on the same page, we modify the `edit_blog` view. The view will:
+
+- Handle the **edit** form to save changes to a blog post.
+- Process the **delete** form when a user confirms deletion.
+
+This logic ensures that each form works independently, yet harmoniously, on the same page.
+
+```python
+def edit_blog(request, pk):
+    blog = get_object_or_404(Blog, pk=pk)
+    if request.method == 'POST':
+        if 'edit_blog' in request.POST:
+            blog_form = BlogForm(request.POST, instance=blog)
+            if blog_form.is_valid():
+                blog_form.save()
+                return redirect('blog_detail', pk=blog.pk)
+        elif 'delete_blog' in request.POST:
+            delete_form = DeleteBlogForm(request.POST)
+            if delete_form.is_valid() and delete_form.cleaned_data['confirm']:
+                blog.delete()
+                return redirect('blog_list')
+    else:
+        blog_form = BlogForm(instance=blog)
+        delete_form = DeleteBlogForm()
+
+    return render(request, 'blog/edit_blog.html', {
+        'blog_form': blog_form,
+        'delete_form': delete_form,
+        'blog': blog
+    })
+```
+
+### 3. **Designing the Template 🎨**
+
+In the template, both forms are displayed together, each with its own submit button. This layout allows users to either **edit** or **delete** their blog post on the same page.
+
+```html
+<h2>Edit Blog Post</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ blog_form.as_p }}
+    <button type="submit" name="edit_blog">Save Changes</button>
+</form>
+
+<h2>Delete Blog Post</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ delete_form.as_p }}
+    <button type="submit" name="delete_blog">Delete Blog Post</button>
+</form>
+```
+
+### 4. **Using Formsets for Multiple Instances 📸**
+
+If the page involves repeating the same task, such as **uploading multiple photos**, we can use Django’s `formset_factory` to manage several forms simultaneously.
+
+```python
+from django.forms import modelformset_factory
+from .models import Photo
+
+...
+
+PhotoFormSet = modelformset_factory(Photo, fields=('image', 'caption'), extra=3)
+formset = PhotoFormSet()
+
+...
+```
+
+### 5. **Template for Multiple Uploads 🎨**
+
+We modify the template to include multiple photo upload fields, using a formset to handle the inputs.
+
+```html
+<h2>Upload Photos</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}
+        {{ form.as_p }}
+    {% endfor %}
+    <button type="submit">Upload Photos</button>
+</form>
+```
+
+### 6. **Conclusion 🏁**
+
+In this chapter, we explored how to include and handle **multiple forms on the same page**, whether for editing, deleting, or uploading multiple items. 
+
+This feature enhances user experience by allowing more control over managing their content in a streamlined way.
+
+---
