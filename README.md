@@ -1953,3 +1953,104 @@ In this chapter, we explored how to include and handle **multiple forms on the s
 This feature enhances user experience by allowing more control over managing their content in a streamlined way.
 
 ---
+
+## Chapter 9: Manipulate Models by Overriding Model Methods 🔧
+
+Building on the ability to manage multiple forms on a single page, we now dive into a deeper level of customization with **model manipulation**. 
+
+In this chapter, you'll learn how to **override model methods** to automate tasks and keep your views even more efficient.
+
+### 1. **Fat Models, Skinny Views 💪**
+
+The Django philosophy of **fat models, skinny views** suggests that the **heavy logic** should live in the model, while the views handle minimal tasks. This approach makes your views cleaner and your logic reusable.
+
+In this case, we need to **resize images** when users upload photos. Instead of doing this in the view, we’ll add the logic to the **Photo model** itself, making it more efficient and allowing it to be reused wherever needed.
+
+### 2. **Resizing Images Automatically 📷**
+
+We’ll create a custom method in the `Photo` model called `resize_image()` to handle resizing photos before they’re saved. This helps reduce storage space as the number of uploaded images grows.
+
+```python
+from PIL import Image
+
+
+class Photo(models.Model):
+
+    # Images treatments
+    IMAGE_MAX_SIZE = (800, 800)
+
+    # Fields
+    image = models.ImageField()
+    
+    ...
+    
+    def __str__(self):
+        return self.caption
+
+    def resize_image(self):
+        image = Image.open(self.image.path)
+        image.thumbnail(self.IMAGE_MAX_SIZE)
+
+        # save teh resized image to the file system
+        image.save(self.image.path)
+```
+
+By using the **Pillow** library, we can resize images to fit a specified maximum size while maintaining the aspect ratio. The logic is placed in the model method, so it doesn't clutter up the views.
+
+### 3. **Overriding the `save()` Method 🤖**
+
+Manually calling `resize_image()` every time a photo is uploaded isn’t practical. Instead, we **override the `save()` method** in the `Photo` model. 
+
+This ensures that every time a new photo is uploaded, it is automatically resized before being saved to the database.
+
+The **super()** function is used to ensure the original save process runs correctly, while the resized image is handled afterward.
+
+```python
+class Photo(models.Model):
+    ...
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.resize_image()
+```
+
+This small change simplifies image handling, making the process fully automatic. The method is reusable and can be applied anytime the `save()` method is called.
+
+### 4. **Customizing the Blog Model 📝**
+
+We extend this concept to the **Blog model**, adding a feature to calculate the **word count** of blog posts. Instead of calculating it each time on the fly, we store it in a field (`word_count`), and update it every time the blog content is saved.
+
+```python
+
+class Blog(models.Model):
+    ...
+    content = models.CharField(max_length=5000)
+    ...
+    
+    word_count = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+    def _get_word_count(self):
+        word_count = len(self.content.split(' '))
+
+        return word_count
+
+    def save(self, *args, **kwargs):
+        # compute word count
+        self.word_count = self._get_word_count()
+
+        # save
+        super().save(*args, **kwargs)
+```
+
+By creating a custom `_get_word_count()` method and overriding the `save()` method, we ensure the word count stays accurate and up-to-date.
+
+### 5. **Key Takeaways 📌**
+
+- Use **fat models** to keep your views clean by placing logic in **model methods**.
+- **Override model methods** like `save()` to automate repetitive tasks, such as resizing images or updating fields.
+- This approach makes your code more **reusable** and easier to maintain.
+
+With these techniques, you can take control of your data and streamline processes in your Django apps, keeping your views simple and efficient.
