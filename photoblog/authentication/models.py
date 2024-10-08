@@ -1,5 +1,9 @@
+from tokenize import group
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import Group
+
 from . import validators
 
 
@@ -16,3 +20,16 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.role == self.CREATOR:
+            group = Group.objects.get(name='creators')
+            group.user_set.add(self)
+
+        elif self.role == self.SUBSCRIBER:
+            group = Group.objects.get(name='subscribers')
+            group.user_set.add(self)
+        else:
+            pass

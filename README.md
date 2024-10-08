@@ -2054,3 +2054,140 @@ By creating a custom `_get_word_count()` method and overriding the `save()` meth
 - This approach makes your code more **reusable** and easier to maintain.
 
 With these techniques, you can take control of your data and streamline processes in your Django apps, keeping your views simple and efficient.
+
+---
+
+## Chapter 10: Assign Permissions Using Groups
+
+Here's a recap of the key points with code snippets to make it clearer how you can implement permissions using groups in Django:
+
+### 1. Restricting Site Access Using Permissions 🚪🔐
+
+Imagine your website has two types of users: Creators and Subscribers. Creators need to create, edit, and delete photos and blog posts, while subscribers should only be able to view content. 
+
+To manage this, we rely on Django's built-in permission system. For every model you create, Django automatically generates four permissions:
+
+- **Add:** Permission to add new entries
+- **Change:** Permission to modify entries
+- **Delete:** Permission to remove entries
+- **View:** Permission to access entries
+
+Django uses these permissions in the admin interface, but you can integrate them into your site's logic.
+
+To restrict access to a view, use the `@permission_required` decorator. This ensures only users with the correct permission can access certain views.
+
+```python
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+
+@login_required
+@permission_required('blog.add_photo', raise_exception=True)
+def photo_upload(request):
+    # Logic for handling photo upload
+    return render(request, 'blog/photo_upload.html')
+```
+In this example, only users with the `blog.add_photo` permission can access the **photo upload** view.
+
+### 2. Restricting Access in Templates 👁️‍🗨️
+
+You can hide or display elements in your templates based on the user’s permissions using the `perms` context variable.
+
+```html
+<!-- Only show the upload button to users with the 'add_photo' permission -->
+{% if perms.blog.add_photo %}
+    <a href="{% url 'photo_upload' %}">Upload a Photo</a>
+{% endif %}
+```
+This checks if the user has the `add_photo` permission and, if so, shows the **Upload Photo** link.
+
+### 3. Granting Permissions to a User 🛠️
+
+Assign permissions to users programmatically (in the `django shell`), like this:
+
+```python
+from django.contrib.auth.models import User, Permission
+
+# Get the user and permission
+user = User.objects.get(username='johnsmith')
+permission = Permission.objects.get(codename='add_photo')
+
+# Add permission to the user
+user.user_permissions.add(permission)
+
+# Save changes
+user.save()
+```
+
+This adds the `add_photo` permission to the `johnsmith` user.
+
+### 4. Organizing Users with Groups 📚
+
+Groups are a great way to manage permissions for multiple users. First, create a custom migration to create groups and assign permissions.
+
+#### Step 1: Create a Custom Migration
+
+```bash
+python manage.py makemigrations --empty authentication
+```
+
+#### Step 2: Define Groups and Permissions in the Migration
+
+```python
+from django.db import migrations
+
+def create_groups(apps, schema_editor):
+    User = apps.get_model('authentication', 'User')
+    Group = apps.get_model('auth', 'Group')
+    Permission = apps.get_model('auth', 'Permission')
+
+    # Get permissions
+    add_photo = Permission.objects.get(codename='add_photo')
+    view_photo = Permission.objects.get(codename='view_photo')
+
+    # Create Creator group and assign permissions
+    creators = Group(name='creators')
+    creators.save()
+    creators.permissions.add(add_photo, view_photo)
+
+    # Create Subscriber group
+    subscribers = Group(name='subscribers')
+    subscribers.save()
+    subscribers.permissions.add(view_photo)
+
+    # Assign users to the appropriate group
+    for user in User.objects.all():
+        if user.role == 'CREATOR':
+            creators.user_set.add(user)
+        elif user.role == 'SUBSCRIBER':
+            subscribers.user_set.add(user)
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('authentication', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.RunPython(create_groups),
+    ]
+```
+This migration creates two groups: **creators** and **subscribers**. Creators get the `add_photo` and `view_photo` permissions, while subscribers only get the `view_photo` permission.
+
+### 5. Adding Custom Permissions 🎛️
+
+If you need custom permissions, you can define them in the `Meta` class of your model.
+
+```python
+class Blog(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+
+    class Meta:
+        permissions = [
+            ('change_blog_title', 'Can change the title of a blog')
+        ]
+```
+
+With this custom permission, you can now control access to the blog title field in your views or templates.
+
+---

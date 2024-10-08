@@ -1,8 +1,8 @@
 from lib2to3.fixes.fix_input import context
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from django.forms import formset_factory
 
@@ -12,7 +12,7 @@ from . import forms
 from . import models
 
 
-class HomeView(View, LoginRequiredMixin):
+class HomeView(LoginRequiredMixin, View):
     template_name = 'blog/home.html'
 
     def get(self, request):
@@ -26,9 +26,11 @@ class HomeView(View, LoginRequiredMixin):
         )
 
 
-class PhotoUploadView(View, LoginRequiredMixin):
+class PhotoUploadView(LoginRequiredMixin, PermissionRequiredMixin, View):
     template_name = 'blog/photo_upload.html'
     form_class = forms.PhotoForm
+
+    permission_required = ('blog.add_photo', )
 
     def get(self, request):
         form = self.form_class()
@@ -54,11 +56,13 @@ class PhotoUploadView(View, LoginRequiredMixin):
                       context={'form': form})
 
 
-class BlogAndPhotoUploadView(View, LoginRequiredMixin):
+class BlogAndPhotoUploadView(LoginRequiredMixin, PermissionRequiredMixin, View):
     template_name = 'blog/create_blog_post.html'
 
     blog_form_class = forms.BlogForm
     photo_form_class = forms.PhotoForm
+
+    permission_required = ('add_blog', 'add_photo')
 
     def get(self, request):
         blog_form = self.blog_form_class()
@@ -104,7 +108,7 @@ class BlogAndPhotoUploadView(View, LoginRequiredMixin):
                       context=context)
 
 
-class ViewBlogView(View, LoginRequiredMixin):
+class ViewBlogView(LoginRequiredMixin, View):
     template_name = 'blog/view_blog.html'
 
     def get(self, request, blog_id):
@@ -115,10 +119,12 @@ class ViewBlogView(View, LoginRequiredMixin):
                       context={'blog': blog})
 
 
-class EditBlogView(View, LoginRequiredMixin):
+class EditBlogView(LoginRequiredMixin, PermissionRequiredMixin, View):
     template_name = "blog/edit_blog.html"
     edit_form_class = forms.BlogForm
     delete_form_class = forms.DeleteBlogForm
+
+    permission_required = ('change_blog', )
 
     def get(self, request, blog_id):
         blog = get_object_or_404(models.Blog, id=blog_id)
@@ -172,9 +178,11 @@ class EditBlogView(View, LoginRequiredMixin):
                       context=context)
 
 
-class CreateMultiplePhotos(View, LoginRequiredMixin):
+class CreateMultiplePhotos(LoginRequiredMixin, PermissionRequiredMixin, View):
     template_name = 'blog/create_multiple_photos.html'
     PhotoFormSet = formset_factory(forms.PhotoForm, extra=3)
+
+    permission_required = ('add_photo', )
 
     def get(self, request):
         formset = self.PhotoFormSet()
