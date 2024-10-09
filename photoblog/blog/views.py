@@ -30,7 +30,7 @@ class PhotoUploadView(LoginRequiredMixin, PermissionRequiredMixin, View):
     template_name = 'blog/photo_upload.html'
     form_class = forms.PhotoForm
 
-    permission_required = ('blog.add_photo', )
+    permission_required = ('blog.add_photo',)
 
     def get(self, request):
         form = self.form_class()
@@ -93,6 +93,12 @@ class BlogAndPhotoUploadView(LoginRequiredMixin, PermissionRequiredMixin, View):
             blog.photo = photo
             blog.save()
 
+            # initiate many2many relationship
+            blog.contributors.add(request.user,
+                                  through_defaults={
+                                      'contribution': 'Primary Author'
+                                  })
+
             # redirect to home page
             return redirect('home')
         else:
@@ -124,7 +130,7 @@ class EditBlogView(LoginRequiredMixin, PermissionRequiredMixin, View):
     edit_form_class = forms.BlogForm
     delete_form_class = forms.DeleteBlogForm
 
-    permission_required = ('change_blog', )
+    permission_required = ('change_blog',)
 
     def get(self, request, blog_id):
         blog = get_object_or_404(models.Blog, id=blog_id)
@@ -182,7 +188,7 @@ class CreateMultiplePhotos(LoginRequiredMixin, PermissionRequiredMixin, View):
     template_name = 'blog/create_multiple_photos.html'
     PhotoFormSet = formset_factory(forms.PhotoForm, extra=3)
 
-    permission_required = ('add_photo', )
+    permission_required = ('add_photo',)
 
     def get(self, request):
         formset = self.PhotoFormSet()
@@ -213,6 +219,29 @@ class CreateMultiplePhotos(LoginRequiredMixin, PermissionRequiredMixin, View):
         return render(request,
                       self.template_name,
                       context={'formset': formset})
+
+
+class FollowUsersView(LoginRequiredMixin, View):
+    template_name = 'blog/follow_users_form.html'
+
+    def get(self, request):
+        form = forms.FollowUsersForm(instance=request.user)
+
+        return render(request,
+                      self.template_name,
+                      context={'form': form})
+
+    def post(self, request):
+        form = forms.FollowUsersForm(request.POST, instance=request.user)
+
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+        else:
+            pass
+        return render(request,
+                      self.template_name,
+                      context={'form': form})
 
 
 # FUNCTIONS BASE-VIEWS

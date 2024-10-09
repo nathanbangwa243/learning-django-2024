@@ -2191,3 +2191,163 @@ class Blog(models.Model):
 With this custom permission, you can now control access to the blog title field in your views or templates.
 
 ---
+
+## Chapter 11: Create Many-to-Many Relationships with Foreign Keys
+
+Now that you have a solid understanding of managing permissions using groups in Django, it’s time to explore how to connect different models using **Many-to-Many Relationships**. 
+
+This feature allows you to link multiple records from one model to multiple records in another, enhancing the flexibility of your application's database structure.
+
+### 1. Understanding Many-to-Many Relationships 🔗
+
+In the previous chapters, you learned how to set up **ForeignKey** fields to create one-to-many relationships, such as linking a photo to a single user. However, some situations call for a more complex relationship. 
+
+For example:
+
+- **Users** can follow multiple **creators**, and a **creator** can be followed by multiple users.
+- **Blog posts** can have multiple **contributors**, and **contributors** can contribute to multiple **blogs**.
+
+This is where **Many-to-Many** relationships come in. Django simplifies this with the **ManyToManyField**.
+
+### 2. Implementing a Many-to-Many Field 🔨
+
+Let’s start by adding a **ManyToManyField** to the `User` model, allowing users to follow creators. Here's how to define this relationship:
+
+```python
+from django.contrib.auth.models import User
+from django.db import models
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    following = models.ManyToManyField('self', symmetrical=False, related_name='followers')
+
+    def __str__(self):
+        return self.user.username
+```
+
+In this setup:
+- `following`: A user can follow many other users.
+- `followers`: This `related_name` allows you to access the followers of a user easily.
+
+### 3. Creating the Form and View ✍️
+
+You’ll need to create a form that lets users select which creators to follow. Use a **ModelForm** for this:
+
+```python
+from django import forms
+from django.contrib.auth import get_user_model
+
+# models
+User = get_user_model()
+
+class FollowUsersForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['following']
+```
+
+Then, create a view to handle the form submission:
+
+```python
+from django.shortcuts import render, redirect
+from .forms import FollowForm
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def follow_users(request):
+    if request.method == 'POST':
+        form = FollowForm(request.POST, instance=request.user.userprofile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = FollowForm(instance=request.user.userprofile)
+    
+    return render(request, 'follow_users.html', {'form': form})
+```
+
+This view ensures only logged-in users can follow others, and the **ModelForm** handles saving the many-to-many relationships.
+
+### 4. Displaying Many-to-Many Data in Templates 📜
+
+Once users start following each other, you might want to display the data in your templates. For instance, show which creators a user follows:
+
+```html
+{% if user.role == user.CREATOR %}
+     <h3>Followers</h3>
+     <ul>
+         {% for follower_user in user.user_set.all %}
+             <li>{{ follower_user.username }}</li>
+         {% endfor %}
+     </ul>
+ {% endif %}
+
+ {% if user.role == user.SUBSCRIBER %}
+     <h3>Following</h3>
+     <ul>
+         {% for following_user in user.followers.all %}
+             <li>{{ following_user.username }}</li>
+         {% endfor %}
+     </ul>
+ {% endif %}
+```
+
+This template snippet loops through the `followers` field and lists the creators a user follows.
+
+### 5. Storing Extra Data with Intermediary Tables 🗄️
+
+Sometimes, you need to store additional information about the relationship itself. For example, you might want to keep track of **contributors** to a blog post and specify what each contributor has added. 
+
+Django allows this with **intermediary models**.
+
+#### Step 1: Define the Intermediary Model
+
+First, create an intermediary model to store the extra data:
+
+```python
+class Contribution(models.Model):
+    blog = models.ForeignKey('Blog', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    contribution = models.CharField(max_length=255)
+```
+
+#### Step 2: Update the Blog Model
+
+Next, link this intermediary model to the **Blog** model using the **ManyToManyField** with the `through` attribute:
+
+```python
+class Blog(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    contributors = models.ManyToManyField(User, through='Contribution')
+```
+
+#### Step 3: Saving the Data
+
+In your view, you can now save both the blog and the contributions:
+
+```python
+from .models import Blog, Contribution
+
+def blog_and_photo_upload(request):
+    if request.method == 'POST':
+        # Save blog
+        blog = Blog.objects.create(title=request.POST['title'], content=request.POST['content'])
+        
+        # Add contributors
+        Contribution.objects.create(blog=blog, user=request.user, contribution='Main content')
+        return redirect('blog_list')
+```
+
+### 6. Migration Strategy: From ForeignKey to Many-to-Many ⚙️
+
+If you started with a **ForeignKey** and now need to migrate to a **ManyToManyField**, you'll need to:
+- Create a new **ManyToManyField**.
+- Write a migration script to transfer existing relationships into the many-to-many table.
+- Remove the original **ForeignKey** after verifying the migration is successful.
+
+By the end of this chapter, you've learned how to link models in Django with **Many-to-Many relationships** and handle extra data using intermediary tables. 
+
+This provides a more dynamic way to manage relationships between models, especially when dealing with complex applications.
+
+---

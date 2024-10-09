@@ -18,6 +18,10 @@ class User(AbstractUser):
     profile_photo = models.ImageField()
     role = models.CharField(max_length=30, choices=Role.choices)
 
+    followers = models.ManyToManyField('self',
+                                       limit_choices_to={'role': CREATOR},
+                                       symmetrical=False)
+
     def __str__(self):
         return self.username
 

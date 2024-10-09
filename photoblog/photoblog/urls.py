@@ -72,6 +72,7 @@ urlpatterns = [
 
     path('blog/<int:blog_id>/edit', blog.views.EditBlogView.as_view(), name='edit_blog'),
 
+    path('follow-users/', blog.views.FollowUsersView.as_view(), name='follow_users'),
 ]
 
 # include static medias
