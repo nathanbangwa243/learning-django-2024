@@ -1574,3 +1574,780 @@ This flexible approach will enable future enhancements like email verification a
 
 --- 
 
+## Chapter 6: Add an Image Upload Facility to Your Blog 🖼️
+
+Now that users can create accounts through the sign-up page, it's time to allow them to enhance their blog posts with images. 
+
+In this chapter, we’ll implement an **image upload feature**, enabling users to attach photos to their blog entries and personalize their content.
+
+### 1. **Defining the Photo Model 📷**
+
+We’ll begin by creating a model to store information about the uploaded images. This includes fields for the image file and a caption to describe the photo.
+
+Here’s the `Photo` model:
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+
+class Photo(models.Model):
+    image = models.ImageField(upload_to='photos/')
+    caption = models.CharField(max_length=255, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.caption if self.caption else 'No Caption'
+```
+
+This model uses Django's **ImageField** to handle image uploads and connects each photo to a user via a `ForeignKey`. The `upload_to` argument ensures that uploaded files are stored in a specific directory within your project.
+
+### 2. **Configuring Media Settings 🛠️**
+
+To manage media files like images, you need to configure Django to handle uploads properly. We do this by defining the `MEDIA_URL` and `MEDIA_ROOT` in the **settings.py** file.
+
+```python
+# photoblog/settings.py
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR.joinpath('media/')
+```
+
+These settings tell Django where to store uploaded files and how to make them accessible during development.
+
+### 3. **Creating a Photo Upload Form 📝**
+
+Next, we’ll create a form that users can use to upload their images. This form is built using Django's `ModelForm`, which automatically generates fields based on the `Photo` model.
+
+```python
+from django import forms
+from .models import Photo
+
+class PhotoForm(forms.ModelForm):
+    class Meta:
+        model = Photo
+        fields = ['image', 'caption']
+```
+
+With this form, users can select an image from their device and add a caption before submitting the form.
+
+### 4. **Building the Photo Upload View 📥**
+
+We’ll create a view to handle the upload form. This view will manage both GET and POST requests, displaying the form and processing the uploaded image.
+
+```python
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import PhotoForm
+
+@login_required
+def upload_photo(request):
+    if request.method == 'POST':
+        form = PhotoForm(request.POST, request.FILES)
+        if form.is_valid():
+            photo = form.save(commit=False)
+            photo.user = request.user
+            photo.save()
+            return redirect('profile')
+    else:
+        form = PhotoForm()
+    return render(request, 'blog/upload_photo.html', {'form': form})
+```
+
+This view ensures that only logged-in users can upload photos, and it saves the image and caption to the database.
+
+### 5. **Creating the Upload Template 🎨**
+
+We’ll now design a simple HTML template to display the photo upload form.
+
+```html
+<h2>Upload a Photo</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Upload</button>
+</form>
+```
+
+The form includes the `enctype="multipart/form-data"` attribute to handle file uploads properly.
+
+### 6. **Adding the URL Pattern 🌐**
+
+Finally, we’ll add a URL pattern for the photo upload view to make it accessible to users.
+
+```python
+# blog/urls.py
+from django.urls import path
+from .views import upload_photo
+
+urlpatterns = [
+    path('upload/', upload_photo, name='upload_photo'),
+]
+```
+
+Now users can visit `/upload/` to access the photo upload page.
+
+### 7. **Displaying Uploaded Photos 🖼️**
+
+Once users have uploaded photos, we need to display them. This can be done by fetching the uploaded images and displaying them in the user’s profile or blog feed.
+
+```html
+<h2>{{ user.username }}'s Photos</h2>
+<ul>
+    {% for photo in user.photo_set.all %}
+    <li>
+        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}">
+        <p>{{ photo.caption }}</p>
+    </li>
+    {% endfor %}
+</ul>
+```
+
+This template loops through the user’s uploaded photos and displays each image along with its caption.
+
+### 8. **Next Steps: Adding Profile Pictures 👤**
+
+Now that users can upload photos for their blog posts, the next step could be to add profile pictures for each user. This enhances personalization and improves user engagement on the platform.
+
+### 9. **Conclusion 🏁**
+
+In this chapter, we implemented an image upload feature using Django's **ImageField** and **ModelForm**, allowing users to attach photos to their blog posts. This functionality will make the blog more dynamic and visually engaging.
+
+---
+
+## Chapter 7: Add a Blog Post Creation Facility 📝
+
+After enabling users to upload images, the next step is allowing them to create blog posts. In this chapter, we’ll integrate a **blog post creation feature**, where users can write posts, upload images, and enhance their content seamlessly.
+
+### 1. **Define the Blog Post Model 🖋️**
+
+We’ll begin by creating a `Blog` model to store the content of each blog post. This model will include fields for the title, content, and an optional photo that can be attached to each post.
+
+```python
+from django.db import models
+from .models import Photo
+from django.contrib.auth.models import User
+
+class Blog(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    photo = models.ForeignKey(Photo, on_delete=models.SET_NULL, null=True, blank=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+```
+
+Here, the `photo` field is optional, allowing users to create blog posts with or without an image.
+
+### 2. **Create Blog and Photo Forms 📝**
+
+Next, we need forms for both the `Blog` and `Photo` models to handle the user inputs. We already have a `PhotoForm`, so we’ll create a `BlogForm` that gathers the post’s title and content.
+
+```python
+from django import forms
+from .models import Blog
+
+class BlogForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = ['title', 'content']
+```
+
+### 3. **Build the Blog Creation View 💻**
+
+We’ll now create a view that handles both the `BlogForm` and `PhotoForm` together. This view will ensure that users can upload a photo and write a blog post in one step.
+
+```python
+from django.shortcuts import render, redirect
+from .forms import BlogForm, PhotoForm
+
+def create_blog(request):
+    if request.method == 'POST':
+        blog_form = BlogForm(request.POST)
+        photo_form = PhotoForm(request.POST, request.FILES)
+        if blog_form.is_valid() and photo_form.is_valid():
+            photo = photo_form.save(commit=False)
+            photo.user = request.user
+            photo.save()
+            blog = blog_form.save(commit=False)
+            blog.author = request.user
+            blog.photo = photo
+            blog.save()
+            return redirect('blog_list')
+    else:
+        blog_form = BlogForm()
+        photo_form = PhotoForm()
+    return render(request, 'blog/create_blog.html', {'blog_form': blog_form, 'photo_form': photo_form})
+```
+
+### 4. **Create the Blog Creation Template 🎨**
+
+We’ll create a template that includes both forms, allowing users to write blog posts and upload images simultaneously.
+
+```html
+<h2>Create a Blog Post</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ blog_form.as_p }}
+    {{ photo_form.as_p }}
+    <button type="submit">Create Blog Post</button>
+</form>
+```
+
+### 5. **Add the URL Pattern 🌐**
+
+Finally, we add a URL pattern to link the view to the blog creation page.
+
+```python
+path('blog/create/', create_blog, name='create_blog'),
+```
+
+### 6. **Display Blog Posts 🖼️**
+
+Once users create blog posts, we need to display them. We can create a view to list all the blog posts and their attached images.
+
+```html
+<h2>Recent Blog Posts</h2>
+<ul>
+    {% for blog in blogs %}
+    <li>
+        <h3>{{ blog.title }}</h3>
+        <p>{{ blog.content }}</p>
+        {% if blog.photo %}
+        <img src="{{ blog.photo.image.url }}" alt="{{ blog.photo.caption }}">
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+```
+
+### 7. **Conclusion 🏁**
+
+In this chapter, we added a **blog post creation feature** that allows users to write posts, upload photos, and personalize their content. 
+
+This addition makes the blog platform more interactive and user-friendly, providing a space for users to express their thoughts and showcase their images.
+
+---
+
+## Chapter 8: Include Multiple Forms on the Same Page 📝
+
+Building on the blog post creation facility, the next step is enhancing user interactions by allowing them to **manage multiple forms** on the same page. 
+
+In this chapter, we’ll explore how users can edit or delete a blog post simultaneously, providing a more seamless experience.
+
+### 1. **Defining Multiple Forms 🖋️**
+
+We'll start by defining two forms for handling different tasks on the same page:
+
+- **BlogForm**: To allow users to **edit** their blog posts.
+- **DeleteBlogForm**: To enable users to **delete** a blog post.
+
+By creating these forms, we give users the ability to manage their posts without leaving the current page.
+
+```python
+from django import forms
+from .models import Blog
+
+class BlogForm(forms.ModelForm):
+    edit_blog = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+
+    class Meta:
+        model = models.Blog
+        fields = ['title', 'content']
+
+
+class DeleteBlogForm(forms.Form):
+    delete_blog = forms.BooleanField(widget=forms.HiddenInput, initial=True)
+```
+
+### 2. **Handling Multiple Forms in the View 👨‍💻**
+
+To process both forms on the same page, we modify the `edit_blog` view. The view will:
+
+- Handle the **edit** form to save changes to a blog post.
+- Process the **delete** form when a user confirms deletion.
+
+This logic ensures that each form works independently, yet harmoniously, on the same page.
+
+```python
+def edit_blog(request, pk):
+    blog = get_object_or_404(Blog, pk=pk)
+    if request.method == 'POST':
+        if 'edit_blog' in request.POST:
+            blog_form = BlogForm(request.POST, instance=blog)
+            if blog_form.is_valid():
+                blog_form.save()
+                return redirect('blog_detail', pk=blog.pk)
+        elif 'delete_blog' in request.POST:
+            delete_form = DeleteBlogForm(request.POST)
+            if delete_form.is_valid() and delete_form.cleaned_data['confirm']:
+                blog.delete()
+                return redirect('blog_list')
+    else:
+        blog_form = BlogForm(instance=blog)
+        delete_form = DeleteBlogForm()
+
+    return render(request, 'blog/edit_blog.html', {
+        'blog_form': blog_form,
+        'delete_form': delete_form,
+        'blog': blog
+    })
+```
+
+### 3. **Designing the Template 🎨**
+
+In the template, both forms are displayed together, each with its own submit button. This layout allows users to either **edit** or **delete** their blog post on the same page.
+
+```html
+<h2>Edit Blog Post</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ blog_form.as_p }}
+    <button type="submit" name="edit_blog">Save Changes</button>
+</form>
+
+<h2>Delete Blog Post</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ delete_form.as_p }}
+    <button type="submit" name="delete_blog">Delete Blog Post</button>
+</form>
+```
+
+### 4. **Using Formsets for Multiple Instances 📸**
+
+If the page involves repeating the same task, such as **uploading multiple photos**, we can use Django’s `formset_factory` to manage several forms simultaneously.
+
+```python
+from django.forms import modelformset_factory
+from .models import Photo
+
+...
+
+PhotoFormSet = modelformset_factory(Photo, fields=('image', 'caption'), extra=3)
+formset = PhotoFormSet()
+
+...
+```
+
+### 5. **Template for Multiple Uploads 🎨**
+
+We modify the template to include multiple photo upload fields, using a formset to handle the inputs.
+
+```html
+<h2>Upload Photos</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}
+        {{ form.as_p }}
+    {% endfor %}
+    <button type="submit">Upload Photos</button>
+</form>
+```
+
+### 6. **Conclusion 🏁**
+
+In this chapter, we explored how to include and handle **multiple forms on the same page**, whether for editing, deleting, or uploading multiple items. 
+
+This feature enhances user experience by allowing more control over managing their content in a streamlined way.
+
+---
+
+## Chapter 9: Manipulate Models by Overriding Model Methods 🔧
+
+Building on the ability to manage multiple forms on a single page, we now dive into a deeper level of customization with **model manipulation**. 
+
+In this chapter, you'll learn how to **override model methods** to automate tasks and keep your views even more efficient.
+
+### 1. **Fat Models, Skinny Views 💪**
+
+The Django philosophy of **fat models, skinny views** suggests that the **heavy logic** should live in the model, while the views handle minimal tasks. This approach makes your views cleaner and your logic reusable.
+
+In this case, we need to **resize images** when users upload photos. Instead of doing this in the view, we’ll add the logic to the **Photo model** itself, making it more efficient and allowing it to be reused wherever needed.
+
+### 2. **Resizing Images Automatically 📷**
+
+We’ll create a custom method in the `Photo` model called `resize_image()` to handle resizing photos before they’re saved. This helps reduce storage space as the number of uploaded images grows.
+
+```python
+from PIL import Image
+
+
+class Photo(models.Model):
+
+    # Images treatments
+    IMAGE_MAX_SIZE = (800, 800)
+
+    # Fields
+    image = models.ImageField()
+    
+    ...
+    
+    def __str__(self):
+        return self.caption
+
+    def resize_image(self):
+        image = Image.open(self.image.path)
+        image.thumbnail(self.IMAGE_MAX_SIZE)
+
+        # save teh resized image to the file system
+        image.save(self.image.path)
+```
+
+By using the **Pillow** library, we can resize images to fit a specified maximum size while maintaining the aspect ratio. The logic is placed in the model method, so it doesn't clutter up the views.
+
+### 3. **Overriding the `save()` Method 🤖**
+
+Manually calling `resize_image()` every time a photo is uploaded isn’t practical. Instead, we **override the `save()` method** in the `Photo` model. 
+
+This ensures that every time a new photo is uploaded, it is automatically resized before being saved to the database.
+
+The **super()** function is used to ensure the original save process runs correctly, while the resized image is handled afterward.
+
+```python
+class Photo(models.Model):
+    ...
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.resize_image()
+```
+
+This small change simplifies image handling, making the process fully automatic. The method is reusable and can be applied anytime the `save()` method is called.
+
+### 4. **Customizing the Blog Model 📝**
+
+We extend this concept to the **Blog model**, adding a feature to calculate the **word count** of blog posts. Instead of calculating it each time on the fly, we store it in a field (`word_count`), and update it every time the blog content is saved.
+
+```python
+
+class Blog(models.Model):
+    ...
+    content = models.CharField(max_length=5000)
+    ...
+    
+    word_count = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+    def _get_word_count(self):
+        word_count = len(self.content.split(' '))
+
+        return word_count
+
+    def save(self, *args, **kwargs):
+        # compute word count
+        self.word_count = self._get_word_count()
+
+        # save
+        super().save(*args, **kwargs)
+```
+
+By creating a custom `_get_word_count()` method and overriding the `save()` method, we ensure the word count stays accurate and up-to-date.
+
+### 5. **Key Takeaways 📌**
+
+- Use **fat models** to keep your views clean by placing logic in **model methods**.
+- **Override model methods** like `save()` to automate repetitive tasks, such as resizing images or updating fields.
+- This approach makes your code more **reusable** and easier to maintain.
+
+With these techniques, you can take control of your data and streamline processes in your Django apps, keeping your views simple and efficient.
+
+---
+
+## Chapter 10: Assign Permissions Using Groups
+
+Here's a recap of the key points with code snippets to make it clearer how you can implement permissions using groups in Django:
+
+### 1. Restricting Site Access Using Permissions 🚪🔐
+
+Imagine your website has two types of users: Creators and Subscribers. Creators need to create, edit, and delete photos and blog posts, while subscribers should only be able to view content. 
+
+To manage this, we rely on Django's built-in permission system. For every model you create, Django automatically generates four permissions:
+
+- **Add:** Permission to add new entries
+- **Change:** Permission to modify entries
+- **Delete:** Permission to remove entries
+- **View:** Permission to access entries
+
+Django uses these permissions in the admin interface, but you can integrate them into your site's logic.
+
+To restrict access to a view, use the `@permission_required` decorator. This ensures only users with the correct permission can access certain views.
+
+```python
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render
+
+@login_required
+@permission_required('blog.add_photo', raise_exception=True)
+def photo_upload(request):
+    # Logic for handling photo upload
+    return render(request, 'blog/photo_upload.html')
+```
+In this example, only users with the `blog.add_photo` permission can access the **photo upload** view.
+
+### 2. Restricting Access in Templates 👁️‍🗨️
+
+You can hide or display elements in your templates based on the user’s permissions using the `perms` context variable.
+
+```html
+<!-- Only show the upload button to users with the 'add_photo' permission -->
+{% if perms.blog.add_photo %}
+    <a href="{% url 'photo_upload' %}">Upload a Photo</a>
+{% endif %}
+```
+This checks if the user has the `add_photo` permission and, if so, shows the **Upload Photo** link.
+
+### 3. Granting Permissions to a User 🛠️
+
+Assign permissions to users programmatically (in the `django shell`), like this:
+
+```python
+from django.contrib.auth.models import User, Permission
+
+# Get the user and permission
+user = User.objects.get(username='johnsmith')
+permission = Permission.objects.get(codename='add_photo')
+
+# Add permission to the user
+user.user_permissions.add(permission)
+
+# Save changes
+user.save()
+```
+
+This adds the `add_photo` permission to the `johnsmith` user.
+
+### 4. Organizing Users with Groups 📚
+
+Groups are a great way to manage permissions for multiple users. First, create a custom migration to create groups and assign permissions.
+
+#### Step 1: Create a Custom Migration
+
+```bash
+python manage.py makemigrations --empty authentication
+```
+
+#### Step 2: Define Groups and Permissions in the Migration
+
+```python
+from django.db import migrations
+
+def create_groups(apps, schema_editor):
+    User = apps.get_model('authentication', 'User')
+    Group = apps.get_model('auth', 'Group')
+    Permission = apps.get_model('auth', 'Permission')
+
+    # Get permissions
+    add_photo = Permission.objects.get(codename='add_photo')
+    view_photo = Permission.objects.get(codename='view_photo')
+
+    # Create Creator group and assign permissions
+    creators = Group(name='creators')
+    creators.save()
+    creators.permissions.add(add_photo, view_photo)
+
+    # Create Subscriber group
+    subscribers = Group(name='subscribers')
+    subscribers.save()
+    subscribers.permissions.add(view_photo)
+
+    # Assign users to the appropriate group
+    for user in User.objects.all():
+        if user.role == 'CREATOR':
+            creators.user_set.add(user)
+        elif user.role == 'SUBSCRIBER':
+            subscribers.user_set.add(user)
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('authentication', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.RunPython(create_groups),
+    ]
+```
+This migration creates two groups: **creators** and **subscribers**. Creators get the `add_photo` and `view_photo` permissions, while subscribers only get the `view_photo` permission.
+
+### 5. Adding Custom Permissions 🎛️
+
+If you need custom permissions, you can define them in the `Meta` class of your model.
+
+```python
+class Blog(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+
+    class Meta:
+        permissions = [
+            ('change_blog_title', 'Can change the title of a blog')
+        ]
+```
+
+With this custom permission, you can now control access to the blog title field in your views or templates.
+
+---
+
+## Chapter 11: Create Many-to-Many Relationships with Foreign Keys
+
+Now that you have a solid understanding of managing permissions using groups in Django, it’s time to explore how to connect different models using **Many-to-Many Relationships**. 
+
+This feature allows you to link multiple records from one model to multiple records in another, enhancing the flexibility of your application's database structure.
+
+### 1. Understanding Many-to-Many Relationships 🔗
+
+In the previous chapters, you learned how to set up **ForeignKey** fields to create one-to-many relationships, such as linking a photo to a single user. However, some situations call for a more complex relationship. 
+
+For example:
+
+- **Users** can follow multiple **creators**, and a **creator** can be followed by multiple users.
+- **Blog posts** can have multiple **contributors**, and **contributors** can contribute to multiple **blogs**.
+
+This is where **Many-to-Many** relationships come in. Django simplifies this with the **ManyToManyField**.
+
+### 2. Implementing a Many-to-Many Field 🔨
+
+Let’s start by adding a **ManyToManyField** to the `User` model, allowing users to follow creators. Here's how to define this relationship:
+
+```python
+from django.contrib.auth.models import User
+from django.db import models
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    following = models.ManyToManyField('self', symmetrical=False, related_name='followers')
+
+    def __str__(self):
+        return self.user.username
+```
+
+In this setup:
+- `following`: A user can follow many other users.
+- `followers`: This `related_name` allows you to access the followers of a user easily.
+
+### 3. Creating the Form and View ✍️
+
+You’ll need to create a form that lets users select which creators to follow. Use a **ModelForm** for this:
+
+```python
+from django import forms
+from django.contrib.auth import get_user_model
+
+# models
+User = get_user_model()
+
+class FollowUsersForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['following']
+```
+
+Then, create a view to handle the form submission:
+
+```python
+from django.shortcuts import render, redirect
+from .forms import FollowForm
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def follow_users(request):
+    if request.method == 'POST':
+        form = FollowForm(request.POST, instance=request.user.userprofile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = FollowForm(instance=request.user.userprofile)
+    
+    return render(request, 'follow_users.html', {'form': form})
+```
+
+This view ensures only logged-in users can follow others, and the **ModelForm** handles saving the many-to-many relationships.
+
+### 4. Displaying Many-to-Many Data in Templates 📜
+
+Once users start following each other, you might want to display the data in your templates. For instance, show which creators a user follows:
+
+```html
+{% if user.role == user.CREATOR %}
+     <h3>Followers</h3>
+     <ul>
+         {% for follower_user in user.user_set.all %}
+             <li>{{ follower_user.username }}</li>
+         {% endfor %}
+     </ul>
+ {% endif %}
+
+ {% if user.role == user.SUBSCRIBER %}
+     <h3>Following</h3>
+     <ul>
+         {% for following_user in user.followers.all %}
+             <li>{{ following_user.username }}</li>
+         {% endfor %}
+     </ul>
+ {% endif %}
+```
+
+This template snippet loops through the `followers` field and lists the creators a user follows.
+
+### 5. Storing Extra Data with Intermediary Tables 🗄️
+
+Sometimes, you need to store additional information about the relationship itself. For example, you might want to keep track of **contributors** to a blog post and specify what each contributor has added. 
+
+Django allows this with **intermediary models**.
+
+#### Step 1: Define the Intermediary Model
+
+First, create an intermediary model to store the extra data:
+
+```python
+class Contribution(models.Model):
+    blog = models.ForeignKey('Blog', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    contribution = models.CharField(max_length=255)
+```
+
+#### Step 2: Update the Blog Model
+
+Next, link this intermediary model to the **Blog** model using the **ManyToManyField** with the `through` attribute:
+
+```python
+class Blog(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    contributors = models.ManyToManyField(User, through='Contribution')
+```
+
+#### Step 3: Saving the Data
+
+In your view, you can now save both the blog and the contributions:
+
+```python
+from .models import Blog, Contribution
+
+def blog_and_photo_upload(request):
+    if request.method == 'POST':
+        # Save blog
+        blog = Blog.objects.create(title=request.POST['title'], content=request.POST['content'])
+        
+        # Add contributors
+        Contribution.objects.create(blog=blog, user=request.user, contribution='Main content')
+        return redirect('blog_list')
+```
+
+### 6. Migration Strategy: From ForeignKey to Many-to-Many ⚙️
+
+If you started with a **ForeignKey** and now need to migrate to a **ManyToManyField**, you'll need to:
+- Create a new **ManyToManyField**.
+- Write a migration script to transfer existing relationships into the many-to-many table.
+- Remove the original **ForeignKey** after verifying the migration is successful.
+
+By the end of this chapter, you've learned how to link models in Django with **Many-to-Many relationships** and handle extra data using intermediary tables. 
+
+This provides a more dynamic way to manage relationships between models, especially when dealing with complex applications.
+
+---

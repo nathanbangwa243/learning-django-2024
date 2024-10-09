@@ -16,6 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.views import LogoutView
 
@@ -54,7 +57,25 @@ urlpatterns = [
          PasswordChangeDoneView.as_view(template_name='authentication/change_password_done.html'),
          name='password_change_done'),
 
-    # BLOGS APPS
-    path('home/', blog.views.home, name='home'),
+    # Profile management
+    path('profile-photo/upload/', authentication.views.UploadProfilePhoto.as_view(), name='upload_profile_photo'),
 
+    # BLOGS APPS
+    path('home/', blog.views.HomeView.as_view(), name='home'),
+
+    path('photo/upload/', blog.views.PhotoUploadView.as_view(), name='photo_upload'),
+    path('photo/upload-multiple/', blog.views.CreateMultiplePhotos.as_view(), name='create_multiple_photos'),
+
+    path('blog/create', blog.views.BlogAndPhotoUploadView.as_view(), name='blog_create'),
+
+    path('blog/<int:blog_id>', blog.views.ViewBlogView.as_view(), name='view_blog'),
+
+    path('blog/<int:blog_id>/edit', blog.views.EditBlogView.as_view(), name='edit_blog'),
+
+    path('follow-users/', blog.views.FollowUsersView.as_view(), name='follow_users'),
 ]
+
+# include static medias
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
