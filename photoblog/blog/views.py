@@ -1,11 +1,12 @@
-from lib2to3.fixes.fix_input import context
+from itertools import chain
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-from django.forms import formset_factory
+from django.db.models import Q
 
+from django.forms import formset_factory
 from django.views.generic import View
 
 from . import forms
@@ -16,13 +17,34 @@ class HomeView(LoginRequiredMixin, View):
     template_name = 'blog/home.html'
 
     def get(self, request):
-        photos = models.Photo.objects.all()
-        blogs = models.Blog.objects.all()
+        # photos = models.Photo.objects.all()
+        # blogs = models.Blog.objects.all()
+
+        blogs = models.Blog.objects.filter(
+            Q(contributors__in=request.user.followers.all()) | Q(starred=True))
+        photos = models.Photo.objects.filter(
+            uploader__in=request.user.followers.all()).exclude(
+            blog__in=blogs)
+
+        blogs_and_photos = sorted(
+            chain(blogs, photos),
+            key=lambda instance: instance.date_created,
+            reverse=True
+        )
+
+        # context = {
+        #     'blogs': blogs,
+        #     'photos': photos,
+        # }
+
+        context = {
+            'blogs_and_photos': blogs_and_photos,
+        }
 
         return render(
             request,
             'blog/home.html',
-            context={'photos': photos, 'blogs': blogs, }
+            context=context
         )
 
 
@@ -242,6 +264,23 @@ class FollowUsersView(LoginRequiredMixin, View):
         return render(request,
                       self.template_name,
                       context={'form': form})
+
+
+class PhotoFeedView(LoginRequiredMixin, View):
+    template_name = 'blog/photo_feed.html'
+
+    def get(self, request):
+        photos = models.Photo.objects.filter(
+            uploader__in=request.user.followers.all().order_by('-date_created')
+        )
+
+        context = {
+            'photos': photos,
+        }
+
+        return render(request,
+                      self.template_name,
+                      context=context)
 
 
 # FUNCTIONS BASE-VIEWS
