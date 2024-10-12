@@ -62,6 +62,7 @@ urlpatterns = [
 
     # BLOGS APPS
     path('home/', blog.views.HomeView.as_view(), name='home'),
+    path('photo-feed/', blog.views.PhotoFeedView.as_view(), name='photo_feed'),
 
     path('photo/upload/', blog.views.PhotoUploadView.as_view(), name='photo_upload'),
     path('photo/upload-multiple/', blog.views.CreateMultiplePhotos.as_view(), name='create_multiple_photos'),

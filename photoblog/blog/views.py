@@ -271,8 +271,8 @@ class PhotoFeedView(LoginRequiredMixin, View):
 
     def get(self, request):
         photos = models.Photo.objects.filter(
-            uploader__in=request.user.followers.all().order_by('-date_created')
-        )
+            uploader__in=request.user.followers.all()
+        ).order_by('-date_created')
 
         context = {
             'photos': photos,

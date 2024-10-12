@@ -1,5 +1,10 @@
-{% extends 'base.html %}
+{% extends 'base.html' %}
 
 {% block content %}
-    {{ photos }}
+    <h2>Photo Feed</h2>
+    <div class="grid-container">
+        {% for photo in photos %}
+            {% include 'blog/partials/photo_snippet.html'%}
+        {% endfor %}
+    </div>
 {% endblock content %}
