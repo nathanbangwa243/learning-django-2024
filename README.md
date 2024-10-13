@@ -2562,3 +2562,121 @@ Finally, create a reusable snippet for displaying photo posts, similar to the on
 This chapter builds on the previous one by focusing on displaying posts in the feed, organizing content using Django's template language to create a seamless and visually appealing user experience. 🚀
 
 ---
+
+## Chapter 14: Paginate the Feed 📜
+
+Now that the social feed is coming together, it's time to enhance user experience by adding pagination. Pagination divides the content into smaller chunks, making it easier to browse through. 
+
+Let’s see how this works!
+
+### Why Pagination? 🚀
+
+Without pagination, loading a feed with thousands of blog posts and photos would be overwhelming. By splitting the content into manageable pages, we improve site performance and make navigation smoother. 
+
+Even platforms with infinite scroll use pagination behind the scenes to load content in batches.
+
+### 1. Setting Up Pagination With `Paginator` 📄
+
+To paginate the feed, Django offers the `Paginator` class. This tool takes an iterable, such as a list or a QuerySet, and splits it into smaller "pages." 
+
+Each page contains a specified number of items, allowing users to explore the content step by step.
+
+Here's how to start:
+
+```python
+from django.core.paginator import Paginator
+
+def home(request):
+    # Fetch blog posts and photos
+    blogs = models.Blog.objects.filter(
+        Q(author__in=request.user.follows) | Q(starred=True)
+    )
+    photos = models.Photo.objects.filter(
+        uploader__in=request.user.follows
+    ).exclude(blog__in=blogs)
+    
+    # Combine and sort the posts
+    blogs_and_photos = sorted(
+        chain(blogs, photos),
+        key=lambda instance: instance.date_created,
+        reverse=True
+    )
+    
+    # Set up the Paginator
+    paginator = Paginator(blogs_and_photos, 6)  # 6 items per page
+    
+    # Get the current page number from the URL
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Pass the page object to the template
+    context = {'page_obj': page_obj}
+    return render(request, 'blog/home.html', context=context)
+```
+
+In this setup:
+- The `Paginator` divides the feed into pages containing six items each.
+- The page number is extracted from the URL (e.g., `?page=2`), allowing users to navigate to different pages.
+
+### 2. Updating the Template to Use Pagination 🎨
+
+Next, we need to modify the template to display the paginated content. Instead of looping through the original list, we iterate over `page_obj`, which contains the items for the current page.
+
+```html
+{% extends 'base.html' %}
+{% load blog_tags %}
+
+{% block content %}
+    <h2>Your Feed</h2>
+    {% for instance in page_obj %}
+        {% if instance|model_type == 'Blog' %}
+            {% include 'blog/partials/blog_snippet.html' with blog=instance %} 
+        {% elif instance|model_type == 'Photo' %}
+            {% include 'blog/partials/photo_snippet.html' with photo=instance %} 
+        {% endif %}
+    {% endfor %}
+{% endblock content %}
+```
+
+This way, we only show a limited number of posts per page, improving loading speed and user experience.
+
+### 3. Adding Navigation Links 🔗
+
+To let users move between pages, add navigation controls at the bottom of the feed. The `page_obj` provides helpful attributes for this, such as `has_previous`, `has_next`, and the total number of pages.
+
+```html
+<span>
+    {% if page_obj.has_previous %}
+        <a href="?page=1">« first</a>
+        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+    {% endif %}
+    
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</span>
+    
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">last »</a>
+    {% endif %}
+</span>
+```
+
+These links allow users to jump to the first page, the previous page, the next page, or the last page, making navigation intuitive.
+
+### 4. Paginating the Photo Feed 📸
+
+Now, it's time to apply pagination to the photo feed. The process is similar to the main feed:
+- Update the `photo_feed` view to use a `Paginator`.
+- Pass `page_obj` to the template.
+- Add navigation controls to the bottom of `photo_feed.html`.
+
+By using the same approach, you ensure consistency across different parts of the site.
+
+### Recap 🌟
+
+- **Pagination** enhances performance by breaking down large content sets into smaller, manageable pages.
+- **The `Paginator` class** makes it easy to divide data and create a seamless browsing experience.
+- **Navigation controls** help users move through pages easily, making the site more user-friendly.
+
+Congratulations! You've successfully added pagination to the feed, giving your app a professional touch. 🎉
+
+---
