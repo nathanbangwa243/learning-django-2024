@@ -2351,3 +2351,332 @@ By the end of this chapter, you've learned how to link models in Django with **M
 This provides a more dynamic way to manage relationships between models, especially when dealing with complex applications.
 
 ---
+
+## Chapter 12: Fetch Posts for the Feed 🚀
+
+Now that you've mastered creating many-to-many relationships with Django's `ManyToManyField`, it’s time to put that knowledge to work by building a dynamic feed. 
+
+In this chapter, we'll learn how to fetch posts from multiple sources—like blog posts and photos—to create a combined feed that’s relevant to the user. 
+
+### 1. Crafting Complex Queries With Field Lookups 🔍
+
+The first step in building a personalized feed is fetching blog posts from creators that the logged-in user follows. This involves querying models based on relationships, such as finding blog posts contributed by creators the user is following. 
+
+In Django, this can be done using field lookups with double underscores (`__`):
+
+```python
+blogs = Blog.objects.filter(contributors__in=request.user.userprofile.following.all())
+```
+
+This query retrieves all blog posts where contributors are among the users that the current user follows.
+
+### 2. Filtering Related Data Using `exclude()` and Multiple Conditions 🎛️
+
+To enhance the feed, we need to fetch photos that meet certain criteria. Suppose we want to include photos uploaded by users the current user follows, but that are not already linked to the fetched blogs:
+
+```python
+photos = Photo.objects.filter(
+    uploader__in=request.user.userprofile.following.all()
+).exclude(
+    blog__in=blogs
+)
+```
+
+This approach filters out any photos that belong to the blogs we have already retrieved, ensuring diversity in the feed content.
+
+### 3. Combining Queries With Q Objects for Flexible Logic 🧩
+
+In some scenarios, we may want to include additional conditions. For example, we can use `Q` objects to apply OR logic, such as including `starred` blog posts even if the contributors aren’t being followed:
+
+```python
+from django.db.models import Q
+
+blogs = Blog.objects.filter(
+    Q(contributors__in=request.user.userprofile.following.all()) | Q(starred=True)
+)
+```
+
+Using `Q`, we construct more flexible queries by combining conditions with AND, OR, or NOT operators, adapting to complex feed requirements.
+
+### 4. Merging and Sorting QuerySets With Different Model Types 🌀
+
+To present a unified feed that combines both blogs and photos, we need to merge the retrieved data. Since blog and photo QuerySets are of different model types, merging them directly with Django's `order_by()` isn’t possible. 
+
+Instead, we use Python’s built-in `itertools.chain` to join the QuerySets, and then sort the combined list by the date of creation:
+
+```python
+from itertools import chain
+
+combined_feed = sorted(
+    chain(blogs, photos),
+    key=lambda instance: instance.date_created,
+    reverse=True
+)
+```
+
+This approach results in a sorted feed that displays the most recent content first, regardless of whether it's a blog post or a photo.
+
+
+### Summary ✨
+
+- **Field lookups** help us fetch related data using relationships between models.
+- **Q objects** allow us to add flexibility to our queries with logical operators.
+- **Combining QuerySets** with `itertools.chain` and sorting enables us to build unified and dynamic feeds.
+
+This chapter has shown you how to fetch and combine different types of content for a personalized feed, setting the stage for more advanced user experiences in your Django application! 🎉
+
+---
+
+Here's an updated version with code snippets for the custom tag section:
+
+---
+
+## Chapter 13: Display Posts in the Feed 📝
+
+After fetching posts from multiple sources to create a dynamic feed, it's time to enhance the presentation by displaying the content effectively. 
+
+In this chapter, we'll learn how to use Django templates to showcase both blog posts and photos in the feed, ensuring a clean and organized display.
+
+### 1. Looping Through Posts in the Template 🔄
+
+Start by updating the `home.html` template to loop through the combined feed and display each post. 
+
+Django's template language allows us to iterate over a list of items using a `{% for %}` loop:
+
+```html
+{% for instance in blogs_and_photos %}
+    <!-- Display post details here -->
+{% endfor %}
+```
+
+However, since the feed contains both blog and photo posts, we need a way to identify the type of each post to customize its appearance.
+
+### 2. Creating a Custom Filter to Identify Post Types 🔍
+
+Django templates do not have access to Python's built-in `type()` function. To address this, we create a custom filter called `model_type` that determines the type of each post, such as "Blog" or "Photo." 
+
+We define this filter in a new file, `blog_extras.py`, and register it for use in templates.
+
+```python
+# blog_extras.py
+from django import template
+
+register = template.Library()
+
+@register.filter
+def model_type(value):
+    return type(value).__name__
+```
+
+#### Load the Custom Filter in the Template
+
+In your `home.html` template, load the custom filter file at the beginning:
+
+```html
+{% load blog_extras %}
+```
+
+### 3. Conditional Rendering Based on Post Type 🧩
+
+With the custom filter in place, we can conditionally render different templates for blog and photo posts. Use the filter in the template to check the post type:
+
+```html
+{% load blog_extras %}
+
+{% if instance|model_type == "Blog" %}
+    <!-- Render blog post details -->
+{% elif instance|model_type == "Photo" %}
+    <!-- Render photo post details -->
+{% endif %}
+```
+
+For blog posts, display the title, image, and author details, while for photo posts, show the image, caption, and uploader information.
+
+### 4. Enhancing Display Using Custom Template Tags 🏷️
+
+To improve the feed, we use custom template tags for more advanced rendering. Unlike filters, custom tags can access the template context, enabling complex logic. 
+
+Let's create a custom tag that checks if the current user is the uploader of the photo and displays "Taken by you" if the user is the uploader, otherwise, it displays the uploader's name.
+
+```python
+# blog_extras.py
+from django import template
+
+register = template.Library()
+
+@register.simple_tag(takes_context=True)
+def display_uploader(context, photo):
+    user = context['user']
+    if photo.uploader == user:
+        return "Taken by you"
+    return f"Uploaded by {photo.uploader.username}"
+```
+
+Here, the custom tag `display_uploader` checks if the currently logged-in user is the uploader of the photo and returns the appropriate message.
+
+#### Step 4: Use the Custom Tag in the Template
+
+Now, you can use the `display_uploader` tag within the loop to show the uploader information:
+
+```html
+{% load blog_extras %}
+
+{% if post|model_type == "Photo" %}
+    <p>{{ display_uploader post }}</p>
+    <img src="{{ post.image.url }}" alt="{{ post.caption }}">
+    <p>{{ post.caption }}</p>
+{% endif %}
+```
+
+### 5. Reusable Template Snippets for Cleaner Code ♻️
+
+To avoid repetitive code, use Django's `{% include %}` tag to break the template into smaller, reusable snippets. 
+
+Create separate snippets for blog and photo posts, such as `_blog_post.html` and `_photo_post.html`, and include them in the main template:
+
+```html
+{% include "_blog_post.html" %}
+{% include "_photo_post.html" %}
+```
+
+This makes the template cleaner and promotes code reuse across different pages.
+
+### 6. Exercises
+
+#### Dynamic Timestamps With Custom Filters ⏱️
+
+Display how long ago each post was created using a custom filter that formats timestamps dynamically based on the time elapsed. 
+
+For example, show "2 minutes ago" for recent posts or "3 days ago" for older content.
+
+#### Building a Reusable Snippet for Photo Posts 📸
+
+Finally, create a reusable snippet for displaying photo posts, similar to the one used for blog posts. This ensures consistent styling and makes it easy to update the presentation across the site.
+
+### Summary ✨
+
+- **Custom filters and tags** help identify post types and handle complex display logic.
+- **Reusable snippets** clean up the template code and allow for consistent styling.
+- **Dynamic timestamps** provide a more engaging user experience by showing relative post creation times.
+
+This chapter builds on the previous one by focusing on displaying posts in the feed, organizing content using Django's template language to create a seamless and visually appealing user experience. 🚀
+
+---
+
+## Chapter 14: Paginate the Feed 📜
+
+Now that the social feed is coming together, it's time to enhance user experience by adding pagination. Pagination divides the content into smaller chunks, making it easier to browse through. 
+
+Let’s see how this works!
+
+### Why Pagination? 🚀
+
+Without pagination, loading a feed with thousands of blog posts and photos would be overwhelming. By splitting the content into manageable pages, we improve site performance and make navigation smoother. 
+
+Even platforms with infinite scroll use pagination behind the scenes to load content in batches.
+
+### 1. Setting Up Pagination With `Paginator` 📄
+
+To paginate the feed, Django offers the `Paginator` class. This tool takes an iterable, such as a list or a QuerySet, and splits it into smaller "pages." 
+
+Each page contains a specified number of items, allowing users to explore the content step by step.
+
+Here's how to start:
+
+```python
+from django.core.paginator import Paginator
+
+def home(request):
+    # Fetch blog posts and photos
+    blogs = models.Blog.objects.filter(
+        Q(author__in=request.user.follows) | Q(starred=True)
+    )
+    photos = models.Photo.objects.filter(
+        uploader__in=request.user.follows
+    ).exclude(blog__in=blogs)
+    
+    # Combine and sort the posts
+    blogs_and_photos = sorted(
+        chain(blogs, photos),
+        key=lambda instance: instance.date_created,
+        reverse=True
+    )
+    
+    # Set up the Paginator
+    paginator = Paginator(blogs_and_photos, 6)  # 6 items per page
+    
+    # Get the current page number from the URL
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Pass the page object to the template
+    context = {'page_obj': page_obj}
+    return render(request, 'blog/home.html', context=context)
+```
+
+In this setup:
+- The `Paginator` divides the feed into pages containing six items each.
+- The page number is extracted from the URL (e.g., `?page=2`), allowing users to navigate to different pages.
+
+### 2. Updating the Template to Use Pagination 🎨
+
+Next, we need to modify the template to display the paginated content. Instead of looping through the original list, we iterate over `page_obj`, which contains the items for the current page.
+
+```html
+{% extends 'base.html' %}
+{% load blog_tags %}
+
+{% block content %}
+    <h2>Your Feed</h2>
+    {% for instance in page_obj %}
+        {% if instance|model_type == 'Blog' %}
+            {% include 'blog/partials/blog_snippet.html' with blog=instance %} 
+        {% elif instance|model_type == 'Photo' %}
+            {% include 'blog/partials/photo_snippet.html' with photo=instance %} 
+        {% endif %}
+    {% endfor %}
+{% endblock content %}
+```
+
+This way, we only show a limited number of posts per page, improving loading speed and user experience.
+
+### 3. Adding Navigation Links 🔗
+
+To let users move between pages, add navigation controls at the bottom of the feed. The `page_obj` provides helpful attributes for this, such as `has_previous`, `has_next`, and the total number of pages.
+
+```html
+<span>
+    {% if page_obj.has_previous %}
+        <a href="?page=1">« first</a>
+        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+    {% endif %}
+    
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</span>
+    
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">last »</a>
+    {% endif %}
+</span>
+```
+
+These links allow users to jump to the first page, the previous page, the next page, or the last page, making navigation intuitive.
+
+### 4. Paginating the Photo Feed 📸
+
+Now, it's time to apply pagination to the photo feed. The process is similar to the main feed:
+- Update the `photo_feed` view to use a `Paginator`.
+- Pass `page_obj` to the template.
+- Add navigation controls to the bottom of `photo_feed.html`.
+
+By using the same approach, you ensure consistency across different parts of the site.
+
+### Recap 🌟
+
+- **Pagination** enhances performance by breaking down large content sets into smaller, manageable pages.
+- **The `Paginator` class** makes it easy to divide data and create a seamless browsing experience.
+- **Navigation controls** help users move through pages easily, making the site more user-friendly.
+
+Congratulations! You've successfully added pagination to the feed, giving your app a professional touch. 🎉
+
+---
