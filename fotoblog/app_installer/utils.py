@@ -7,7 +7,8 @@ from .models import App
 
 def install_app(app_name):
     app = App.objects.get(name=app_name)
-    if app.is_installed or app_name in settings.INSTALLED_APPS:
+
+    if not app.is_installed or app_name not in settings.INSTALLED_APPS:
         return
 
     # Ajouter l'application à INSTALLED_APPS et exécuter la migration
@@ -40,5 +41,16 @@ def detect_apps():
     # Enregistrer dans le modèle App uniquement les nouvelles applications détectées
     for app_name in app_names:
         App.objects.get_or_create(name=app_name, defaults={'description': 'Description par défaut'})
+
+        app = App.objects.get(name=app_name)
+
+        # app already in INSTALLED_APPS
+        if app_name in settings.INSTALLED_APPS:
+            app.is_installed = True
+            app.save()
+
+        else:
+            app.is_installed = False
+            app.save()
 
     return app_names
