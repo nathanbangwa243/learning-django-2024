@@ -1,0 +1,14 @@
+<h1>Tableau de Bord des Applications</h1>
+<ul>
+    {% for app in apps %}
+        <li>
+            <h2>{{ app.name }}</h2>
+            <p>{{ app.description }}</p>
+            {% if app.is_installed %}
+                <a href="{% url 'app_installer:uninstall_app' app.name %}">Désinstaller</a>
+            {% else %}
+                <a href="{% url 'app_installer:install_app' app.name %}">Installer</a>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>

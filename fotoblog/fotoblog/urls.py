@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.views import (
     LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView)
-from django.urls import path
+from django.urls import path, include
 
 import authentication.views
 import blog.views
@@ -34,7 +34,10 @@ urlpatterns = [
     path('blog/<int:blog_id>/edit', blog.views.edit_blog, name='edit_blog'),
     path('photo/upload-multiple/', blog.views.create_multiple_photos,
          name='create_multiple_photos'),
-    path('follow-users/', blog.views.follow_users, name='follow_users')
+    path('follow-users/', blog.views.follow_users, name='follow_users'),
+
+    # APPS DASHBOARD
+    path('apps/', include('app_installer.urls')),
 ]
 
 if settings.DEBUG:
