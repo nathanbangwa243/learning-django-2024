@@ -1,5 +1,5 @@
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
-from django.urls import path
+from django.urls import path, include
 
 from . import views
 from .apps import AuthenticationConfig
@@ -24,4 +24,5 @@ urlpatterns = [
     path('signup/', views.signup_page, name='signup'),
     path('profile-photo/upload', views.upload_profile_photo,
          name='upload_profile_photo'),
+    path('apps/', include('app_installer.urls'), name='home'),
 ]

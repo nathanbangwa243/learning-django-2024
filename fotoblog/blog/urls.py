@@ -8,6 +8,7 @@ app_name = BlogConfig.name
 
 urlpatterns = [
 
+    path('', views.home, name='blog'),
     path('home/', views.home, name='home'),
     path('photo-feed/', views.photo_feed, name='photo_feed'),
     path('photo/upload/', views.photo_upload, name='photo_upload'),

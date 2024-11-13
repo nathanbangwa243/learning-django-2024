@@ -9,8 +9,11 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    # login
+    path('', include('authentication.urls'), name='home'),
+
     # APPS DASHBOARD
-    path('apps/', include('app_installer.urls'), name='home'),
+    # path('apps/', include('app_installer.urls'), name='home'),
 ]
 
 if settings.DEBUG:

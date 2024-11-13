@@ -29,3 +29,13 @@ urlpatterns = [
 
 ]
 ```
+
+5. redirect to dashboard after login
+
+```python
+# project_name/project_name/settings.py
+
+...
+LOGIN_REDIRECT_URL = 'app_installer:app_dashboard'
+...
+```
