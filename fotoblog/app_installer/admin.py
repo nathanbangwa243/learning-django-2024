@@ -1,3 +1,9 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import AppConfig
+
+class AppConfigAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_enabled')
+
+
+admin.site.register(AppConfig, AppConfigAdmin)

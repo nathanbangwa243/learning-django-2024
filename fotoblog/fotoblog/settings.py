@@ -27,13 +27,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'authentication',
     'blog',
+    'invoicing',
 
     # APPS INSTALLER
-    'app_installer'
+    'app_installer',
+    'payroll',
 ]
 
 MIDDLEWARE = [
-    'app_installer.middleware.DynamicAppLoaderMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -41,6 +42,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'app_installer.middleware.DynamicAppLoaderMiddleware',
+    'app_installer.middleware.DynamicAppMiddleware',
+
 ]
 
 ROOT_URLCONF = 'fotoblog.urls'

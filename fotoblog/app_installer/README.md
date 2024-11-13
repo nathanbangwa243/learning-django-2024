@@ -1,0 +1,31 @@
+# Conditions
+
+Here are the conditions for a directory to be considered as an app
+
+1. Directory must have `app.py` file
+2. the `app.py` file can contain this configuration
+
+```python
+# my_app/apps.py
+
+# app_installer config
+
+APP_INSTALLER_CONFIG = {
+    'auto_install': False,
+}
+```
+3. Directory must have `urls.py` file
+4. In the 'urls.py' file, the `urlpatterns` must contain one route (`path`) with `directory name` as route (path) name
+
+```python
+# my_app/urls.py
+
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path("", views.HomeView.as_view(), name='my_app'),
+
+]
+```
