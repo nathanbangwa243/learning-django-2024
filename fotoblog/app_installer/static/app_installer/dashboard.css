@@ -1,0 +1,104 @@
+/* Copie le code CSS que nous avons vu précédemment */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f6fa;
+    margin: 0;
+    padding: 0;
+}
+h1 {
+    text-align: center;
+    color: #34495e;
+    padding: 20px;
+    font-size: 2.5em;
+    font-weight: bold;
+    border-bottom: 2px solid #2c3e50;
+    margin-bottom: 20px;
+}
+ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+li {
+    background-color: #ffffff;
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+li:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+li h2 {
+    color: #2c3e50;
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}
+li h2 a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+li h2 a:hover {
+    color: #2980b9;
+}
+li p {
+    color: #7f8c8d;
+    font-size: 1em;
+    margin: 15px 0;
+}
+li a {
+    display: inline-block;
+    padding: 10px 20px;
+    color: #ffffff;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    text-decoration: none;
+}
+li a[href*="install_app"] {
+    background-color: #27ae60;
+}
+li a[href*="install_app"]:hover {
+    background-color: #2ecc71;
+}
+li a[href*="uninstall_app"] {
+    background-color: #e74c3c;
+}
+li a[href*="uninstall_app"]:hover {
+    background-color: #c0392b;
+}
+
+.btn-install, .btn-uninstall {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 16px;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.btn-install {
+    background-color: #27ae60;
+}
+
+.btn-install:hover {
+    background-color: #2ecc71;
+}
+
+.btn-uninstall {
+    background-color: #e74c3c;
+}
+
+.btn-uninstall:hover {
+    background-color: #c0392b;
+}

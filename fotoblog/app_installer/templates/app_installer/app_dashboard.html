@@ -1,0 +1,30 @@
+{% load static %}
+{% load app_installer %}
+
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tableau de Bord des Applications</title>
+    <link rel="stylesheet" href="{% static 'app_installer/dashboard.css' %}" />
+  </head>
+  <body>
+    <h1>Tableau de Bord des Applications</h1>
+    <ul>
+      {% for app in apps %}
+        {% if app.name != app_installer %}
+          <li>
+            {% if app.is_enabled %}
+              <h2><a href="{{ app.name|app_url }}">{{ app.name }}</a></h2>
+              <p>{{ app.description }}</p>
+              <a href="{% url 'app_installer:uninstall_app' app.name %}" class="btn-uninstall">Désinstaller</a>
+            {% else %}
+              <h2>{{ app.name }}</h2>
+              <p>{{ app.description }}</p>
+              <a href="{% url 'app_installer:install_app' app.name %}" class="btn-install">Installer</a>
+            {% endif %}
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </body>
+</html>

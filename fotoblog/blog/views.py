@@ -5,8 +5,12 @@ from django.core.paginator import Paginator
 from django.forms import formset_factory
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, NoReverseMatch
 
 from . import forms, models
+from .apps import BlogConfig
+
+from app_installer.models import AppConfig
 
 
 @login_required
@@ -21,12 +25,18 @@ def photo_upload(request):
             photo.uploader = request.user
             # now we can save
             photo.save()
-            return redirect('home')
+            return redirect('blog:home')
     return render(request, 'blog/photo_upload.html', context={'form': form})
 
 
 @login_required
 def home(request):
+    # check if app is installed
+    app = AppConfig.objects.get(name=BlogConfig.name)
+
+    if not app.is_enabled:
+        return redirect('app_installer:forbidden', app_name=BlogConfig.name)
+
     blogs = models.Blog.objects.filter(
         Q(contributors__in=request.user.follows.all()) | Q(starred=True))
     photos = models.Photo.objects.filter(

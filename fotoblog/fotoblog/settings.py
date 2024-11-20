@@ -25,8 +25,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+
+    # APPS INSTALLER
+    'app_installer',
+
+    # CUSTOM APPS
+    'payroll',
     'authentication',
     'blog',
+    'invoicing',
 ]
 
 MIDDLEWARE = [
@@ -37,6 +45,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'app_installer.middleware.DynamicAppLoaderMiddleware',
+    'app_installer.middleware.DynamicAppMiddleware',
+
 ]
 
 ROOT_URLCONF = 'fotoblog.urls'
@@ -119,8 +130,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'authentication.User'
 
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_URL = 'authentication:login'
+LOGIN_REDIRECT_URL = 'app_installer:app_dashboard'
 LOGOUT_REDIRECT_URL = LOGIN_URL
 
 MEDIA_URL = '/media/'

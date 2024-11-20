@@ -2680,3 +2680,7 @@ By using the same approach, you ensure consistency across different parts of the
 Congratulations! You've successfully added pagination to the feed, giving your app a professional touch. 🎉
 
 ---
+
+## Chapter 15 : Dynamic App Installation
+
+Check the [app_installer docs](fotoblog/app_installer/README.md)
