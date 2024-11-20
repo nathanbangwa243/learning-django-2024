@@ -72,9 +72,15 @@ class UninstallAppView(View):
         pass
 
 
+class AppForbiddenView(View):
+    template_name = 'app_installer/forbidden.html'
 
+    def get(self, request, app_name):
+        app = AppConfig.objects.get(name=app_name)
 
-
+        return render(request,
+                      template_name=self.template_name,
+                      context={'app': app})
 
 
 

@@ -9,4 +9,6 @@ urlpatterns = [
     path("install/<str:app_name>/", views.InstallAppView.as_view(), name='install_app'),
     path("uninstall/<str:app_name>/", views.UninstallAppView.as_view(), name='uninstall_app'),
     path("default-home/<str:app_name>/", views.DefaultAppHomeView.as_view(), name='default_home'),
+    path("forbidden/<str:app_name>/", views.AppForbiddenView.as_view(), name='forbidden'),
+
 ]
