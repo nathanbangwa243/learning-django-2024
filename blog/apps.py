@@ -11,4 +11,4 @@ APP_INSTALLER_CONFIG = {
     'auto_install': False,
 }
 
-print('http://127.0.0.1:8000/blog')
+# print('http://127.0.0.1:8000/blog')
