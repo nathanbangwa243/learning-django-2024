@@ -12,7 +12,8 @@ env = environ.Env(
 )
 
 # Load the .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+environ.Env.read_env()
 
 # Use environment variables
 SECRET_KEY = env('SECRET_KEY')
